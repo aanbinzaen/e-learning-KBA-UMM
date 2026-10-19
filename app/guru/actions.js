@@ -5,6 +5,7 @@ import { ambilSesi } from "@/lib/auth";
 import { bersih } from "@/lib/validasi";
 import { dariInputWIB } from "@/lib/waktu";
 import { idYouTube } from "@/lib/youtube";
+import { validasiSoal } from "@/lib/soal";
 
 // Semua penulisan memakai sesi pengguna, jadi aturan RLS database tetap berlaku
 // (pengajar hanya bisa mengubah grup yang diampunya).
@@ -118,4 +119,106 @@ export async function simpanKehadiran(pertemuanId, _prev, fd) {
   if (hapus.length) await s.supabase.from("absensi").delete().eq("pertemuan_id", pertemuanId).in("profile_id", hapus);
   revalidatePath("/guru/rekap"); revalidatePath("/dashboard/absensi");
   return { ok: `Kehadiran tersimpan (${tulis.length} peserta dicatat).` };
+}
+
+// ---------------- Kuis ----------------
+export async function buatKuis(pertemuanId, grupId, _prev, fd) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const judul = bersih(fd.get("judul"));
+  if (!judul) return { galat: "Judul kuis wajib diisi." };
+  const { data, error } = await s.supabase.from("kuis").insert({ pertemuan_id: pertemuanId, grup_id: grupId, judul }).select("id").single();
+  if (error) return TIDAK;
+  segarkan(pertemuanId);
+  redirect(`/guru/kuis/${data.id}`);
+}
+
+export async function ubahKuis(kuisId, _prev, fd) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const judul = bersih(fd.get("judul")), terbit = fd.get("diterbitkan") === "on";
+  if (!judul) return { galat: "Judul wajib diisi." };
+  if (terbit) {
+    const { count } = await s.supabase.from("soal").select("id", { count: "exact", head: true }).eq("kuis_id", kuisId);
+    if (!count) return { galat: "Tambahkan minimal satu soal sebelum menerbitkan." };
+  }
+  const { error } = await s.supabase.from("kuis").update({ judul, diterbitkan: terbit, boleh_ulang: fd.get("boleh_ulang") === "on" }).eq("id", kuisId);
+  if (error) return TIDAK;
+  revalidatePath(`/guru/kuis/${kuisId}`); revalidatePath("/dashboard/kelas");
+  return { ok: terbit ? "Tersimpan. Kuis terlihat oleh peserta." : "Tersimpan sebagai draf (belum terlihat peserta)." };
+}
+
+export async function hapusKuis(kuisId, pertemuanId) {
+  const s = await sesiGuru(); if (!s) return;
+  await s.supabase.from("kuis").delete().eq("id", kuisId);
+  segarkan(pertemuanId);
+  redirect(`/guru/pertemuan/${pertemuanId}`);
+}
+
+function bacaSoal(fd) {
+  const pasangan = [1, 2, 3, 4, 5].map((i) => [i, String(fd.get(`o${i}`) || "").trim()]).filter(([, t]) => t);
+  const idx = pasangan.findIndex(([i]) => String(i) === String(fd.get("benar")));
+  return validasiSoal({
+    tipe: fd.get("tipe") === "esai" ? "esai" : "pilihan_ganda",
+    pertanyaan: fd.get("pertanyaan"), bobot: fd.get("bobot"), pembahasan: fd.get("pembahasan"), kunci_esai: fd.get("kunci_esai"),
+    opsi: pasangan.map(([, t]) => t), jawaban_benar: idx < 0 ? null : idx,
+  });
+}
+
+export async function tambahSoal(kuisId, _prev, fd) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const b = bacaSoal(fd); if (b.galat) return b;
+  const { count } = await s.supabase.from("soal").select("id", { count: "exact", head: true }).eq("kuis_id", kuisId);
+  const { error } = await s.supabase.from("soal").insert({ kuis_id: kuisId, urutan: count || 0, ...b.nilai });
+  if (error) return TIDAK;
+  revalidatePath(`/guru/kuis/${kuisId}`);
+  return { ok: "Soal ditambahkan." };
+}
+
+export async function ubahSoal(soalId, kuisId, _prev, fd) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const b = bacaSoal(fd); if (b.galat) return b;
+  const { error } = await s.supabase.from("soal").update(b.nilai).eq("id", soalId);
+  if (error) return TIDAK;
+  revalidatePath(`/guru/kuis/${kuisId}`);
+  return { ok: "Soal diperbarui." };
+}
+
+// Impor banyak soal sekaligus dari hasil pembacaan berkas/teks (divalidasi ulang di server).
+export async function imporSoal(kuisId, daftar) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  if (!Array.isArray(daftar) || !daftar.length || daftar.length > 200) return { galat: "Jumlah soal harus 1 sampai 200." };
+  const baris = [];
+  for (const [i, d] of daftar.entries()) {
+    const v = validasiSoal(d || {});
+    if (v.galat) return { galat: `Soal ke-${i + 1}: ${v.galat}` };
+    baris.push(v.nilai);
+  }
+  const { count } = await s.supabase.from("soal").select("id", { count: "exact", head: true }).eq("kuis_id", kuisId);
+  const { error } = await s.supabase.from("soal").insert(baris.map((b, i) => ({ kuis_id: kuisId, urutan: (count || 0) + i, ...b })));
+  if (error) return TIDAK;
+  revalidatePath(`/guru/kuis/${kuisId}`);
+  return { ok: `${baris.length} soal berhasil ditambahkan.` };
+}
+
+// Pengajar menilai jawaban esai satu peserta. Perhitungan akhir dilakukan di database.
+export async function nilaiEsai(percobaanId, kuisId, _prev, fd) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const { data: esai } = await s.supabase.from("soal").select("id,bobot").eq("kuis_id", kuisId).eq("tipe", "esai");
+  const penilaian = {};
+  for (const e of esai || []) {
+    const mentah = String(fd.get(`skor_${e.id}`) ?? "").trim();
+    if (mentah === "") continue;
+    const skor = Number(mentah.replace(",", "."));
+    if (!Number.isFinite(skor) || skor < 0 || skor > e.bobot) return { galat: `Skor harus antara 0 dan ${e.bobot}.` };
+    penilaian[e.id] = { skor, catatan: String(fd.get(`catatan_${e.id}`) || "").trim().slice(0, 1000) };
+  }
+  const { data, error } = await s.supabase.rpc("nilai_esai", { pid: percobaanId, penilaian });
+  if (error || data?.galat) return TIDAK;
+  revalidatePath(`/guru/kuis/${kuisId}/nilai`); revalidatePath(`/guru/kuis/${kuisId}`); revalidatePath("/guru/rekap"); revalidatePath("/dashboard/kelas");
+  return { ok: data.menunggu ? "Tersimpan. Masih ada esai yang belum diberi skor." : `Tersimpan. Nilai akhir peserta: ${data.nilai}.` };
+}
+
+export async function hapusSoal(soalId, kuisId) {
+  const s = await sesiGuru(); if (!s) return;
+  await s.supabase.from("soal").delete().eq("id", soalId);
+  revalidatePath(`/guru/kuis/${kuisId}`);
 }

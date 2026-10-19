@@ -13,12 +13,12 @@ export default async function Dashboard() {
   let tautan = null, teman = [], persen = 0, total = 0, selesai = 0, absenBuka = 0;
   if (grup) {
     const hitung = (t) => supabase.from(t).select("id", { count: "exact", head: true }).eq("grup_id", grup.id);
-    const [m, r, s] = await Promise.all([
-      hitung("materi"), hitung("rekaman"),
-      supabase.from("progres").select("item_id", { count: "exact", head: true }).eq("profile_id", user.id).in("jenis", ["materi", "rekaman"]),
+    const [m, r, k, s] = await Promise.all([
+      hitung("materi"), hitung("rekaman"), hitung("kuis").eq("diterbitkan", true),
+      supabase.from("progres").select("item_id", { count: "exact", head: true }).eq("profile_id", user.id).in("jenis", ["materi", "rekaman", "kuis"]),
     ]);
     absenBuka = (await supabase.from("pertemuan").select("id", { count: "exact", head: true }).eq("grup_id", grup.id).eq("absensi_buka", true)).count || 0;
-    total = (m.count || 0) + (r.count || 0); selesai = Math.min(s.count || 0, total);
+    total = (m.count || 0) + (r.count || 0) + (k.count || 0); selesai = Math.min(s.count || 0, total);
     persen = total ? Math.round((selesai / total) * 100) : 0;
     tautan = (await supabase.from("grup_tautan").select("link").eq("grup_id", grup.id).maybeSingle()).data?.link;
     teman = (await supabase.rpc("teman_grup")).data || [];
@@ -64,7 +64,7 @@ export default async function Dashboard() {
           <Link href="/dashboard/kelas" className="btn-hijau w-full">Buka kelas</Link>
         </section>
       )}
-      <section className="kartu"><p className="text-sm text-tinta/70">Kuis akan hadir di tahap berikutnya.</p></section>
+      
     </div>
   );
 }

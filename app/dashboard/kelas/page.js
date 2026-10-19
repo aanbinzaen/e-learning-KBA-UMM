@@ -10,7 +10,7 @@ export default async function KelasSaya() {
   if (!pg) return <p className="kartu">Anda belum ditempatkan di grup. Hubungi admin.</p>;
 
   const [{ data: daftar }, { data: selesai }] = await Promise.all([
-    supabase.from("pertemuan").select("id,judul,waktu,materi(id),rekaman(id)").eq("grup_id", pg.grup_id).order("waktu", { ascending: false }),
+    supabase.from("pertemuan").select("id,judul,waktu,materi(id),rekaman(id),kuis(id)").eq("grup_id", pg.grup_id).order("waktu", { ascending: false }),
     supabase.from("progres").select("item_id").eq("profile_id", user.id),
   ]);
   const sudah = new Set((selesai || []).map((x) => x.item_id));
@@ -20,7 +20,7 @@ export default async function KelasSaya() {
       <h1 className="text-2xl font-bold text-hijau-tua">Kelas saya</h1>
       <p className="text-tinta/80">{pg.grup?.nama}</p>
       {(daftar || []).map((p) => {
-        const item = [...p.materi, ...p.rekaman];
+        const item = [...p.materi, ...p.rekaman, ...p.kuis.filter((x) => x.id)];
         const n = item.filter((x) => sudah.has(x.id)).length;
         const persen = item.length ? Math.round((n / item.length) * 100) : 0;
         return (

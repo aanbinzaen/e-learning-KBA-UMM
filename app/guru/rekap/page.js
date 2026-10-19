@@ -2,6 +2,8 @@ import { wajibGuru } from "@/lib/guru";
 import { rentangWIB, rekapGrup } from "@/lib/rekap";
 import PilihGrup from "@/components/PilihGrup";
 import TabelRekap from "@/components/TabelRekap";
+import TabelNilai from "@/components/TabelNilai";
+import { nilaiGrup } from "@/lib/nilai";
 
 export const metadata = { title: "Peserta dan rekap" };
 
@@ -10,7 +12,7 @@ export default async function RekapGuru({ searchParams }) {
   const aktif = grup.find((g) => g.id === searchParams.grup) || grup[0];
   if (!aktif) return <p className="kartu">Anda belum mengampu grup.</p>;
   const { dari = "", sampai = "" } = searchParams;
-  const hasil = await rekapGrup(supabase, { ...aktif, kelas: aktif.kelas }, rentangWIB(dari, sampai));
+  const [hasil, nilai] = await Promise.all([rekapGrup(supabase, { ...aktif, kelas: aktif.kelas }, rentangWIB(dari, sampai)), nilaiGrup(supabase, aktif)]);
   const q = new URLSearchParams({ grup: aktif.id, ...(dari && { dari }), ...(sampai && { sampai }) }).toString();
 
   return (
@@ -26,9 +28,11 @@ export default async function RekapGuru({ searchParams }) {
       <div className="flex flex-wrap gap-3">
         <a href={`/guru/rekap/csv?${q}`} className="btn-kuning">Unduh ringkasan (CSV)</a>
         <a href={`/guru/rekap/csv?${q}&rinci=1`} className="btn-garis !border-hijau !text-hijau">Unduh rinci per pertemuan</a>
+        <a href={`/guru/rekap/csv?grup=${aktif.id}&nilai=1`} className="btn-garis !border-hijau !text-hijau">Unduh nilai kuis</a>
       </div>
       <TabelRekap judul={`${aktif.kelas?.jenis_kelamin} · ${aktif.kelas?.tingkat} · ${aktif.nama}`} rekap={hasil} />
-      <p className="text-xs text-tinta/60">Kehadiran = Hadir ÷ pertemuan yang sudah berlangsung. Nilai kuis ditambahkan di tahap berikutnya.</p>
+      <TabelNilai nilai={nilai} />
+      <p className="text-xs text-tinta/60">Kehadiran = Hadir ÷ pertemuan yang sudah berlangsung. Nilai kuis = nilai terbaik tiap kuis yang diterbitkan.</p>
     </div>
   );
 }

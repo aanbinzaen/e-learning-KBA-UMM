@@ -11,12 +11,19 @@ export default async function DetailKelas({ params }) {
   const { supabase, user } = await ambilSesi();
   const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan").eq("id", params.id).maybeSingle();
   if (!p) notFound();
-  const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }] = await Promise.all([
+  const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }, { data: kuis }, { data: perc }] = await Promise.all([
     supabase.from("materi").select("id,jenis,judul,catatan").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("rekaman").select("id,judul,youtube_id").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("progres").select("item_id").eq("profile_id", user.id),
     supabase.from("grup_tautan").select("link").eq("grup_id", p.grup_id).maybeSingle(),
+    supabase.from("kuis").select("id,judul").eq("pertemuan_id", p.id).eq("diterbitkan", true).order("dibuat_pada"),
+    supabase.from("percobaan").select("kuis_id,nilai").eq("profile_id", user.id),
   ]);
+  const terbaik = {}, menunggu = {};
+  (perc || []).forEach((x) => {
+    if (x.nilai === null) menunggu[x.kuis_id] = true;
+    else terbaik[x.kuis_id] = Math.max(terbaik[x.kuis_id] ?? -1, x.nilai);
+  });
   const sudah = new Set((selesai || []).map((x) => x.item_id));
 
   return (
@@ -52,6 +59,18 @@ export default async function DetailKelas({ params }) {
           </article>
         ))}
         {!rekaman?.length && <p className="kartu text-tinta/70">Belum ada rekaman.</p>}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-hijau-tua">Kuis</h2>
+        {(kuis || []).map((q) => (
+          <article key={q.id} className="kartu space-y-2">
+            <h3 className="font-semibold">{q.judul}</h3>
+            <p className="text-sm text-tinta/70">{terbaik[q.id] !== undefined ? `Nilai terbaik: ${terbaik[q.id]}` : menunggu[q.id] ? "Menunggu penilaian pengajar" : "Belum dikerjakan"}</p>
+            <Link href={`/dashboard/kuis/${q.id}`} className="btn-hijau w-full">{terbaik[q.id] !== undefined || menunggu[q.id] ? "Lihat hasil" : "Kerjakan kuis"}</Link>
+          </article>
+        ))}
+        {!kuis?.length && <p className="kartu text-tinta/70">Belum ada kuis untuk pertemuan ini.</p>}
       </section>
     </div>
   );

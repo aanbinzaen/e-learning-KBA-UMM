@@ -6,15 +6,16 @@ import FormAksi from "@/components/FormAksi";
 import TombolHapus from "@/components/TombolHapus";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import FormPdf from "./FormPdf";
-import { ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
+import { buatKuis, ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
 
 export default async function DetailPertemuan({ params }) {
   const { supabase } = await wajibGuru();
   const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan,absensi_buka,grup(nama)").eq("id", params.id).maybeSingle();
   if (!p) notFound();
-  const [{ data: materi }, { data: rekaman }] = await Promise.all([
+  const [{ data: materi }, { data: rekaman }, { data: kuis }] = await Promise.all([
     supabase.from("materi").select("id,jenis,judul").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("rekaman").select("id,judul,youtube_id").eq("pertemuan_id", p.id).order("dibuat_pada"),
+    supabase.from("kuis").select("id,judul,diterbitkan").eq("pertemuan_id", p.id).order("dibuat_pada"),
   ]);
   const Kotak = ({ judul, children }) => <section className="kartu space-y-3"><h2 className="text-lg font-semibold text-hijau">{judul}</h2>{children}</section>;
 
@@ -67,6 +68,18 @@ export default async function DetailPertemuan({ params }) {
         <FormAksi aksi={tambahRekaman.bind(null, p.id, p.grup_id)} kirim="Tambah rekaman" reset className="space-y-4 rounded-2xl border-2 border-hijau/15 p-4">
           <div><label className="label" htmlFor="jr">Judul rekaman</label><input id="jr" name="judul" className="input" required /></div>
           <div><label className="label" htmlFor="lk">Tautan YouTube</label><input id="lk" name="link" className="input" placeholder="https://youtu.be/…" required /></div>
+        </FormAksi>
+      </Kotak>
+
+      <Kotak judul={`Kuis (${kuis?.length || 0})`}>
+        {(kuis || []).map((k) => (
+          <Link key={k.id} href={`/guru/kuis/${k.id}`} className="flex items-center justify-between gap-2 rounded-2xl bg-hijau-muda px-4 py-3 hover:bg-hijau-muda/70">
+            <span className="min-w-0 truncate font-medium">{k.judul}</span>
+            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${k.diterbitkan ? "bg-hijau text-white" : "bg-white text-tinta/70"}`}>{k.diterbitkan ? "Diterbitkan" : "Draf"}</span>
+          </Link>
+        ))}
+        <FormAksi aksi={buatKuis.bind(null, p.id, p.grup_id)} kirim="Buat kuis" reset className="space-y-4 rounded-2xl border-2 border-hijau/15 p-4">
+          <div><label className="label" htmlFor="jk">Judul kuis baru</label><input id="jk" name="judul" className="input" placeholder="Kuis Pertemuan 1" required /></div>
         </FormAksi>
       </Kotak>
 
