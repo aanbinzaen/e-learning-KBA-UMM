@@ -15,6 +15,8 @@ export async function gantiPassword(_prev, formData) {
 
   const { error } = await supabase.auth.updateUser({ password: baru });
   if (error) return { galat: "Password belum bisa diubah. Coba password lain atau ulangi masuk." };
-  await supabaseAdmin().from("profiles").update({ wajib_ganti_password: false }).eq("id", user.id);
+  const admin = supabaseAdmin();
+  await admin.from("profiles").update({ wajib_ganti_password: false }).eq("id", user.id);
+  await admin.from("password_awal").delete().eq("profile_id", user.id); // password awal dihapus setelah diganti
   redirect("/dashboard");
 }

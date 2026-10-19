@@ -19,3 +19,9 @@
   .label { @apply mb-1 block text-sm font-medium text-tinta/80; }
   .bagian { @apply mx-auto w-full max-w-5xl px-5 py-12 md:py-16; }
 }
+
+@media print {
+  header, footer, .no-print { display: none !important; }
+  body { background: #fff; }
+  .bagian { max-width: none; padding: 0; }
+}

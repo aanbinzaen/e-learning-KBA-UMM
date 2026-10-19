@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { keluar } from "@/app/masuk/actions";
@@ -11,11 +12,14 @@ export default async function DashboardLayout({ children }) {
   const { data: profil } = await supabase.from("profiles").select("nama_lengkap,kode,role,aktif,wajib_ganti_password").eq("id", user.id).maybeSingle();
   if (!profil || !profil.aktif) { await supabase.auth.signOut(); redirect("/masuk"); }
   if (profil.wajib_ganti_password) redirect("/ganti-password");
+  const nav = [["/dashboard", "Dashboard"], ["/dashboard/profil", "Profil Saya"], ...(profil.role === "admin" ? [["/admin", "Admin"]] : [])];
   return (
     <div className="bagian">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <p className="text-sm text-tinta/70">Kode: <span className="font-semibold text-tinta">{profil.kode}</span></p>
-        <form action={keluar}><button className="rounded-xl border-2 border-hijau/30 px-4 py-2 text-sm font-medium text-hijau hover:bg-hijau-muda">Keluar</button></form>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <nav className="flex gap-2" aria-label="Menu akun">
+          {nav.map(([h, l]) => <Link key={h} href={h} className="rounded-2xl border-2 border-hijau/20 bg-white px-4 py-2.5 text-sm font-medium text-hijau hover:bg-hijau-muda">{l}</Link>)}
+        </nav>
+        <form action={keluar}><button className="rounded-xl border-2 border-hijau/30 px-4 py-2.5 text-sm font-medium text-hijau hover:bg-hijau-muda">Keluar</button></form>
       </div>
       {children}
     </div>
