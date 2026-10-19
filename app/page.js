@@ -24,17 +24,15 @@ export default async function Beranda() {
   return (
     <>
       <section className="bg-hijau text-white">
-        <div className="mx-auto max-w-5xl px-5 pb-14 pt-12 md:pb-20 md:pt-16">
-          <p lang="ar" className="arab text-right text-6xl text-kuning sm:text-7xl md:text-8xl">مَحَبَّةُ اللهِ</p>
-          <h1 className="mt-6 max-w-2xl text-3xl font-bold leading-tight sm:text-4xl">
-            Kuliah Bahasa Arab Untuk Meraih Mahabatullah
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-white/90">
-            Belajar Bahasa Arab bersama Rumah Dakwah Malang dan Pesantren Online, langsung dari HP Anda.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/masuk" className="btn-kuning">Masuk</Link>
-            <Link href="/pengajar" className="btn-garis">Kenali pengajar</Link>
+        <div className="mx-auto grid max-w-5xl items-center gap-6 px-5 pb-14 pt-12 md:grid-cols-[1.3fr_1fr] md:gap-10 md:pb-20 md:pt-16">
+          <p lang="ar" className="arab text-right text-6xl text-kuning sm:text-7xl md:order-2 md:text-center md:text-8xl">مَحَبَّةُ اللهِ</p>
+          <div className="md:order-1">
+            <h1 className="max-w-2xl text-3xl font-bold leading-tight sm:text-4xl">Kuliah Bahasa Arab Untuk Meraih Mahabatullah</h1>
+            <p className="mt-4 max-w-xl text-lg text-white/90">Belajar Bahasa Arab bersama Rumah Dakwah Malang dan Pesantren Online, langsung dari HP Anda.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/masuk" className="btn-kuning">Masuk</Link>
+              <Link href="/pengajar" className="btn-garis">Kenali pengajar</Link>
+            </div>
           </div>
         </div>
         <div className="h-2 bg-gradient-to-r from-kuning to-jingga" />

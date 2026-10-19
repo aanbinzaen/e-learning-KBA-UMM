@@ -4,7 +4,7 @@ import { wajibAdmin } from "@/lib/auth";
 export const metadata = { title: "Admin", robots: { index: false } };
 const NAV = [
   ["/admin", "Ringkasan"], ["/admin/peserta", "Peserta"], ["/admin/impor", "Impor"],
-  ["/admin/grup", "Kelas & Grup"], ["/admin/kredensial", "Kode & Password"],
+  ["/admin/grup", "Kelas & Grup"], ["/admin/kredensial", "Kode & Password"], ["/admin/konten", "Konten"],
 ];
 
 export default async function AdminLayout({ children }) {
