@@ -15,7 +15,7 @@ export default function FormMasuk() {
     <form action={aksi} className="space-y-4" noValidate>
       <div>
         <label htmlFor="identitas" className="label">Kode peserta, email, atau nomor WhatsApp</label>
-        <input id="identitas" name="identitas" className="input" autoComplete="username" autoCapitalize="characters" placeholder="KBUMM-001" required />
+        <input id="identitas" name="identitas" className="input" autoComplete="username" autoCapitalize="characters" placeholder="BISMILLAH-001" required />
       </div>
       <div>
         <label htmlFor="password" className="label">Password</label>
