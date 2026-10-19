@@ -1,7 +1,7 @@
 # KB-UMM E-Learning – Tahap 4: Absensi dan Rekap
 
 ## Yang baru
-- **Peserta** (menu *Absensi*): tombol **Hadir** pada pertemuan yang dibuka pengajar (nama, kelas, grup terisi otomatis), tidak bisa ganda, riwayat, dan persen kehadiran. Dashboard menampilkan pita kuning saat absensi dibuka.
+- **Peserta** (menu *Absensi*): pilihan **Hadir / Izin / Sakit** pada pertemuan yang dibuka pengajar (nama, kelas, grup terisi otomatis), tidak bisa ganda, riwayat, dan persen kehadiran. Dashboard menampilkan pita kuning saat absensi dibuka.
 - **Pengajar** (*Kelola Kelas*): di halaman pertemuan ada kotak **Absensi** (Buka/Tutup) dan **Isi kehadiran manual** (Hadir / Izin / Sakit / Alpa). Menu **Peserta & Rekap** menampilkan daftar peserta grup, rekap kehadiran, filter tanggal, dan unduhan CSV.
 - **Admin** (*Rekap Absensi*): semua grup, filter jenis kelamin, kelas, grup, dan tanggal; unduh CSV ringkasan atau rinci per pertemuan. Saklar "Pisahkan Ikhwan dan Akhwat" di Ringkasan mengatur apakah tabel dipisah per jenis kelamin.
 
@@ -25,3 +25,9 @@
 - Peserta tidak menulis tabel absensi langsung. Ia hanya bisa memanggil fungsi yang memeriksa: anggota grup itu, absensi dibuka, dan belum tercatat.
 - Pengajar hanya bisa mengubah dan melihat absensi grup yang diampunya; daftar peserta untuk pengajar hanya memuat nama dan kode (tanpa email/WhatsApp).
 - CSV mengamankan sel yang diawali = + - @ agar tidak dieksekusi sebagai rumus Excel.
+
+## Pembaruan: peserta memilih Hadir / Izin / Sakit
+Jalankan `supabase/05_perbarui_absensi_peserta.sql` di SQL Editor (sekali), lalu unggah kode terbaru.
+- Peserta bisa mengganti pilihannya selama absensi masih dibuka.
+- Jika pengajar sudah mengisi manual, pilihan peserta terkunci.
+- Satu peserta tetap hanya punya satu catatan per pertemuan.

@@ -1,6 +1,6 @@
 import { ambilSesi } from "@/lib/auth";
 import { tanggalIndo } from "@/lib/data";
-import TombolHadir from "./TombolHadir";
+import TombolAbsen from "./TombolAbsen";
 
 export const metadata = { title: "Absensi" };
 const LABEL = { hadir: "Hadir", izin: "Izin", sakit: "Sakit", alpa: "Alpa" };
@@ -13,9 +13,10 @@ export default async function Absensi() {
 
   const [{ data: daftar }, { data: abs }] = await Promise.all([
     supabase.from("pertemuan").select("id,judul,waktu,absensi_buka").eq("grup_id", pg.grup_id).order("waktu", { ascending: false }),
-    supabase.from("absensi").select("pertemuan_id,status").eq("profile_id", user.id),
+    supabase.from("absensi").select("pertemuan_id,status,dicatat_oleh").eq("profile_id", user.id),
   ]);
   const status = Object.fromEntries((abs || []).map((a) => [a.pertemuan_id, a.status]));
+  const oleh = Object.fromEntries((abs || []).map((a) => [a.pertemuan_id, a.dicatat_oleh]));
   const sekarang = Date.now();
   const dibuka = (daftar || []).filter((p) => p.absensi_buka);
   const terlaksana = (daftar || []).filter((p) => new Date(p.waktu).getTime() <= sekarang || status[p.id]);
@@ -35,7 +36,7 @@ export default async function Absensi() {
           <p className="text-sm text-white/80">Absensi dibuka</p>
           <h2 className="text-xl font-bold">{p.judul}</h2>
           <p className="mb-4 text-sm text-white/90">{tanggalIndo(p.waktu)}</p>
-          {status[p.id] ? <p className="rounded-2xl bg-white/15 px-4 py-3 font-medium">Status Anda: {LABEL[status[p.id]]}</p> : <TombolHadir pertemuanId={p.id} />}
+          <TombolAbsen pertemuanId={p.id} awal={status[p.id] || null} dikunci={oleh[p.id] === "pengajar"} />
         </section>
       ))}
       {!dibuka.length && <p className="kartu text-tinta/70">Tidak ada absensi yang sedang dibuka. Pengajar akan membukanya saat pertemuan berlangsung.</p>}

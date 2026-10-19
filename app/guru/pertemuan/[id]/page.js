@@ -32,7 +32,7 @@ export default async function DetailPertemuan({ params }) {
       </Kotak>
 
       <Kotak judul="Absensi">
-        <p>Status: <b className={p.absensi_buka ? "text-hijau" : "text-tinta/70"}>{p.absensi_buka ? "Dibuka — peserta bisa menekan Hadir" : "Ditutup"}</b></p>
+        <p>Status: <b className={p.absensi_buka ? "text-hijau" : "text-tinta/70"}>{p.absensi_buka ? "Dibuka — peserta bisa memilih Hadir, Izin, atau Sakit" : "Ditutup"}</b></p>
         <div className="flex flex-wrap gap-3">
           <form action={ubahAbsensiBuka.bind(null, p.id, !p.absensi_buka)}>
             <button className={p.absensi_buka ? "btn-garis !border-hijau !text-hijau" : "btn-hijau"}>{p.absensi_buka ? "Tutup absensi" : "Buka absensi"}</button>

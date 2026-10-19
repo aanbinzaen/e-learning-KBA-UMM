@@ -52,7 +52,7 @@ export default async function Dashboard() {
         </section>
       )}
       {absenBuka > 0 && p?.role === "peserta" && (
-        <Link href="/dashboard/absensi" className="block rounded-kartu bg-kuning p-5 text-center text-lg font-bold text-hijau-tua">Absensi sedang dibuka. Tekan untuk hadir</Link>
+        <Link href="/dashboard/absensi" className="block rounded-kartu bg-kuning p-5 text-center text-lg font-bold text-hijau-tua">Absensi sedang dibuka. Ketuk untuk mengisi</Link>
       )}
       {grup && (
         <section className="kartu space-y-3">
