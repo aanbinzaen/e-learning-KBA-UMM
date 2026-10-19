@@ -10,13 +10,14 @@ export default async function Dashboard() {
   const { data: pg } = await supabase.from("peserta_grup")
     .select("grup(id,nama,kelas(jenis_kelamin,tingkat),pengajar(nama))").eq("profile_id", user.id).maybeSingle();
   const grup = pg?.grup;
-  let tautan = null, teman = [], persen = 0, total = 0, selesai = 0;
+  let tautan = null, teman = [], persen = 0, total = 0, selesai = 0, absenBuka = 0;
   if (grup) {
     const hitung = (t) => supabase.from(t).select("id", { count: "exact", head: true }).eq("grup_id", grup.id);
     const [m, r, s] = await Promise.all([
       hitung("materi"), hitung("rekaman"),
       supabase.from("progres").select("item_id", { count: "exact", head: true }).eq("profile_id", user.id).in("jenis", ["materi", "rekaman"]),
     ]);
+    absenBuka = (await supabase.from("pertemuan").select("id", { count: "exact", head: true }).eq("grup_id", grup.id).eq("absensi_buka", true)).count || 0;
     total = (m.count || 0) + (r.count || 0); selesai = Math.min(s.count || 0, total);
     persen = total ? Math.round((selesai / total) * 100) : 0;
     tautan = (await supabase.from("grup_tautan").select("link").eq("grup_id", grup.id).maybeSingle()).data?.link;
@@ -50,6 +51,9 @@ export default async function Dashboard() {
           <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">{teman.map((t) => <li key={t.nama_lengkap} className="py-1">{t.nama_lengkap}</li>)}</ul>
         </section>
       )}
+      {absenBuka > 0 && p?.role === "peserta" && (
+        <Link href="/dashboard/absensi" className="block rounded-kartu bg-kuning p-5 text-center text-lg font-bold text-hijau-tua">Absensi sedang dibuka. Tekan untuk hadir</Link>
+      )}
       {grup && (
         <section className="kartu space-y-3">
           <h2 className="text-lg font-semibold text-hijau">Progres belajar</h2>
@@ -60,7 +64,7 @@ export default async function Dashboard() {
           <Link href="/dashboard/kelas" className="btn-hijau w-full">Buka kelas</Link>
         </section>
       )}
-      <section className="kartu"><p className="text-sm text-tinta/70">Absensi dan kuis akan hadir di tahap berikutnya.</p></section>
+      <section className="kartu"><p className="text-sm text-tinta/70">Kuis akan hadir di tahap berikutnya.</p></section>
     </div>
   );
 }

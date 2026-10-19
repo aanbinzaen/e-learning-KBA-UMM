@@ -91,3 +91,31 @@ export async function hapusRekaman(id, pertemuanId) {
   await s.supabase.from("rekaman").delete().eq("id", id);
   segarkan(pertemuanId);
 }
+
+export async function ubahAbsensiBuka(pertemuanId, buka) {
+  const s = await sesiGuru(); if (!s) return;
+  await s.supabase.from("pertemuan").update({ absensi_buka: buka }).eq("id", pertemuanId);
+  segarkan(pertemuanId);
+  revalidatePath("/dashboard/absensi");
+}
+
+const STATUS = ["hadir", "izin", "sakit", "alpa"];
+export async function simpanKehadiran(pertemuanId, _prev, fd) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const { data: p } = await s.supabase.from("pertemuan").select("grup_id").eq("id", pertemuanId).maybeSingle();
+  if (!p) return TIDAK;
+  const { data: anggota } = await s.supabase.rpc("anggota_grup_daftar", { gid: p.grup_id });
+  const tulis = [], hapus = [];
+  for (const a of anggota || []) {
+    const v = String(fd.get(`s_${a.profile_id}`) || "");
+    if (STATUS.includes(v)) tulis.push({ pertemuan_id: pertemuanId, profile_id: a.profile_id, status: v, dicatat_oleh: "pengajar" });
+    else hapus.push(a.profile_id);
+  }
+  if (tulis.length) {
+    const { error } = await s.supabase.from("absensi").upsert(tulis, { onConflict: "pertemuan_id,profile_id" });
+    if (error) return { galat: "Gagal menyimpan kehadiran." };
+  }
+  if (hapus.length) await s.supabase.from("absensi").delete().eq("pertemuan_id", pertemuanId).in("profile_id", hapus);
+  revalidatePath("/guru/rekap"); revalidatePath("/dashboard/absensi");
+  return { ok: `Kehadiran tersimpan (${tulis.length} peserta dicatat).` };
+}

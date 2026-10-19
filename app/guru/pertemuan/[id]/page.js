@@ -6,11 +6,11 @@ import FormAksi from "@/components/FormAksi";
 import TombolHapus from "@/components/TombolHapus";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import FormPdf from "./FormPdf";
-import { ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
+import { ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
 
 export default async function DetailPertemuan({ params }) {
   const { supabase } = await wajibGuru();
-  const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan,grup(nama)").eq("id", params.id).maybeSingle();
+  const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan,absensi_buka,grup(nama)").eq("id", params.id).maybeSingle();
   if (!p) notFound();
   const [{ data: materi }, { data: rekaman }] = await Promise.all([
     supabase.from("materi").select("id,jenis,judul").eq("pertemuan_id", p.id).order("dibuat_pada"),
@@ -29,6 +29,16 @@ export default async function DetailPertemuan({ params }) {
           <div><label className="label" htmlFor="waktu">Tanggal dan jam (WIB)</label><input id="waktu" name="waktu" type="datetime-local" defaultValue={keInputWIB(p.waktu)} className="input" required /></div>
           <div><label className="label" htmlFor="ket">Keterangan</label><textarea id="ket" name="keterangan" rows="2" defaultValue={p.keterangan || ""} className="input !py-3" /></div>
         </FormAksi>
+      </Kotak>
+
+      <Kotak judul="Absensi">
+        <p>Status: <b className={p.absensi_buka ? "text-hijau" : "text-tinta/70"}>{p.absensi_buka ? "Dibuka — peserta bisa menekan Hadir" : "Ditutup"}</b></p>
+        <div className="flex flex-wrap gap-3">
+          <form action={ubahAbsensiBuka.bind(null, p.id, !p.absensi_buka)}>
+            <button className={p.absensi_buka ? "btn-garis !border-hijau !text-hijau" : "btn-hijau"}>{p.absensi_buka ? "Tutup absensi" : "Buka absensi"}</button>
+          </form>
+          <Link href={`/guru/pertemuan/${p.id}/absensi`} className="btn-kuning">Isi kehadiran manual</Link>
+        </div>
       </Kotak>
 
       <Kotak judul={`Materi (${materi?.length || 0})`}>
