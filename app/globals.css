@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-krem text-tinta font-sans antialiased; }
+  :focus-visible { outline: 3px solid #F5B800; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation: none !important; transition: none !important; } }
+}
+@layer components {
+  .arab { @apply font-arab; direction: rtl; unicode-bidi: isolate; line-height: 1.9; }
+  .btn { @apply inline-flex min-h-[48px] items-center justify-center rounded-2xl px-6 text-base font-semibold transition-colors; }
+  .btn-kuning { @apply btn bg-kuning text-hijau-tua hover:bg-jingga hover:text-white; }
+  .btn-hijau { @apply btn bg-hijau text-white hover:bg-hijau-tua; }
+  .btn-garis { @apply btn border-2 border-white/70 text-white hover:bg-white/10; }
+  .kartu { @apply rounded-kartu bg-white p-6 shadow-[0_1px_0_rgba(30,123,52,.12),0_8px_24px_-12px_rgba(30,123,52,.25)]; }
+  .input { @apply min-h-[48px] w-full rounded-2xl border-2 border-hijau/20 bg-white px-4 text-base outline-none focus:border-hijau; }
+  .label { @apply mb-1 block text-sm font-medium text-tinta/80; }
+  .bagian { @apply mx-auto w-full max-w-5xl px-5 py-12 md:py-16; }
+}
