@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ambilJadwal, ambilPengumuman, ambilKonten, tanggalIndo } from "@/lib/data";
+import { ambilJadwal, ambilPengumuman, ambilKonten, bagianTanggal, tanggalPendek } from "@/lib/data";
 
 export const revalidate = 60;
 
@@ -8,6 +8,18 @@ const TINGKAT = [
   { nama: "Lanjutan", isi: "Memperdalam kaidah Bahasa Arab dan membaca teks dengan lebih mandiri." },
   { nama: "Kelas Khusus", isi: "Kelas pendalaman untuk Ikhwan yang sudah siap belajar lebih jauh." },
 ];
+function Judul({ children }) {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-hijau-tua">{children}</h2>
+      <div className="mt-2 h-1 w-12 rounded-full bg-gradient-to-r from-kuning to-jingga" />
+    </div>
+  );
+}
+// Paragraf rata kanan-kiri dengan pemenggalan kata otomatis agar jarak antarkata tetap rapi di layar HP.
+const rata = "text-justify leading-relaxed [hyphens:auto]";
+const paragraf = (t) => String(t || "").split(/\n{2,}/).map((x) => x.trim()).filter(Boolean);
+
 const CARA = [
   "Masuk dengan kode peserta dari pengajar Anda",
   "Ikuti pertemuan lewat tombol Gabung Kelas",
@@ -39,13 +51,16 @@ export default async function Beranda() {
       </section>
 
       <section className="bagian">
-        <h2 className="text-2xl font-bold text-hijau-tua">Tentang program</h2>
-        <p className="mt-3 max-w-2xl leading-relaxed">{tentang}</p>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <Judul>Tentang program</Judul>
+        <div lang="id" className={`mt-5 max-w-3xl space-y-4 border-l-4 border-kuning pl-5 ${rata}`}>
+          {paragraf(tentang).map((t, i) => <p key={i} className="whitespace-pre-line">{t}</p>)}
+        </div>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
           {TINGKAT.map((t) => (
-            <div key={t.nama} className="kartu">
+            <div key={t.nama} className="kartu relative overflow-hidden !pt-8">
+              <span aria-hidden className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-kuning to-jingga" />
               <h3 className="text-lg font-semibold text-hijau">{t.nama}</h3>
-              <p className="mt-2 text-sm leading-relaxed">{t.isi}</p>
+              <p lang="id" className={`mt-2 text-sm ${rata}`}>{t.isi}</p>
             </div>
           ))}
         </div>
@@ -53,45 +68,58 @@ export default async function Beranda() {
 
       <section className="bg-hijau-muda">
         <div className="bagian">
-          <h2 className="text-2xl font-bold text-hijau-tua">Cara belajar</h2>
-          <ol className="mt-6 grid gap-4 sm:grid-cols-2">
+          <Judul>Cara belajar</Judul>
+          <ol className="mt-8 grid gap-4 sm:grid-cols-2">
             {CARA.map((c, i) => (
-              <li key={c} className="flex items-start gap-4 rounded-kartu bg-white p-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kuning font-bold text-hijau-tua">{i + 1}</span>
-                <span className="pt-1.5">{c}</span>
+              <li key={c} className="flex items-center gap-4 rounded-kartu bg-white p-5 shadow-[0_1px_0_rgba(30,123,52,.12),0_8px_24px_-12px_rgba(30,123,52,.25)]">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-kuning font-bold text-hijau-tua">{i + 1}</span>
+                <span className="leading-snug">{c}</span>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      <section className="bagian grid gap-10 md:grid-cols-2">
+      <section className="bagian grid gap-12 md:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-bold text-hijau-tua">Jadwal terdekat</h2>
+          <Judul>Jadwal terdekat</Judul>
           {jadwal.length === 0 ? (
-            <p className="kartu mt-4 text-tinta/70">Belum ada jadwal. Jadwal pertemuan akan muncul di sini.</p>
+            <p className="kartu mt-6 text-tinta/70">Belum ada jadwal. Jadwal pertemuan akan muncul di sini.</p>
           ) : (
-            <ul className="mt-4 space-y-3">
-              {jadwal.map((j) => (
-                <li key={j.id} className="kartu !p-4">
-                  <p className="font-semibold">{j.judul}</p>
-                  <p className="text-sm text-hijau">{tanggalIndo(j.waktu_mulai)}</p>
-                  {j.keterangan && <p className="mt-1 text-sm text-tinta/70">{j.keterangan}</p>}
-                </li>
-              ))}
+            <ul className="mt-6 space-y-4">
+              {jadwal.map((j) => {
+                const d = bagianTanggal(j.waktu_mulai);
+                return (
+                  <li key={j.id} className="kartu flex gap-4 !p-4">
+                    <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-hijau text-white" aria-hidden>
+                      <span className="text-2xl font-bold leading-none">{d.hari}</span>
+                      <span className="mt-1 text-[0.65rem] font-semibold tracking-widest text-kuning">{d.bulan}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold leading-snug">{j.judul}</p>
+                      <p className="mt-0.5 text-sm font-medium text-hijau">{d.namaHari}, pukul {d.jam} WIB</p>
+                      {j.keterangan && <p lang="id" className={`mt-2 text-sm text-tinta/75 ${rata}`}>{j.keterangan}</p>}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-hijau-tua">Pengumuman</h2>
+          <Judul>Pengumuman</Judul>
           {pengumuman.length === 0 ? (
-            <p className="kartu mt-4 text-tinta/70">Belum ada pengumuman.</p>
+            <p className="kartu mt-6 text-tinta/70">Belum ada pengumuman.</p>
           ) : (
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-6 space-y-4">
               {pengumuman.map((p) => (
-                <li key={p.id} className="kartu !p-4">
-                  <p className="font-semibold">{p.judul}</p>
-                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{p.isi}</p>
+                <li key={p.id} className="kartu relative overflow-hidden !p-5 !pl-6">
+                  <span aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-kuning to-jingga" />
+                  <p className="font-semibold uppercase leading-snug tracking-wide text-hijau-tua">{p.judul}</p>
+                  {p.dibuat_pada && <p className="mt-1 text-xs text-tinta/55">{tanggalPendek(p.dibuat_pada)}</p>}
+                  <div lang="id" className={`mt-3 space-y-3 border-t border-hijau/15 pt-3 text-sm ${rata}`}>
+                    {paragraf(p.isi).map((t, i) => <p key={i} className="whitespace-pre-line">{t}</p>)}
+                  </div>
                 </li>
               ))}
             </ul>
