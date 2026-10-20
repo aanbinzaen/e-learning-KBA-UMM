@@ -2,7 +2,7 @@ import { wajibAdmin } from "@/lib/auth";
 import { tanggalIndo } from "@/lib/data";
 import FormAksi from "@/components/FormAksi";
 import TombolHapus from "@/components/TombolHapus";
-import { tambahPengumuman, hapusPengumuman, tambahJadwal, hapusJadwal, simpanKonten, tambahPendiri, hapusPendiri } from "./actions";
+import { tambahPengumuman, hapusPengumuman, tambahJadwal, hapusJadwal, simpanKonten } from "./actions";
 
 export const metadata = { title: "Konten situs" };
 const TEKS = [
@@ -12,11 +12,10 @@ const TEKS = [
 
 export default async function Konten() {
   const { supabase } = await wajibAdmin();
-  const [{ data: pengumuman }, { data: jadwal }, { data: teks }, { data: pendiri }] = await Promise.all([
+  const [{ data: pengumuman }, { data: jadwal }, { data: teks }] = await Promise.all([
     supabase.from("pengumuman").select("id,judul,dibuat_pada").order("dibuat_pada", { ascending: false }),
     supabase.from("jadwal").select("id,judul,waktu_mulai").order("waktu_mulai", { ascending: false }).limit(20),
     supabase.from("konten_halaman").select("kunci,isi"),
-    supabase.from("pendiri").select("id,nama,peran").order("urutan"),
   ]);
   const isi = Object.fromEntries((teks || []).map((t) => [t.kunci, t.isi]));
   const Kotak = ({ judul, children }) => <section className="kartu space-y-4"><h2 className="text-lg font-semibold text-hijau">{judul}</h2>{children}</section>;
@@ -56,16 +55,7 @@ export default async function Konten() {
         ))}
       </Kotak>
 
-      <Kotak judul="Pendiri">
-        {(pendiri || []).map((p) => <Baris key={p.id} judul={p.nama} sub={p.peran || ""} aksi={<TombolHapus aksi={hapusPendiri.bind(null, p.id)} />} />)}
-        <FormAksi aksi={tambahPendiri} kirim="Tambah pendiri" reset className="space-y-3 rounded-2xl border-2 border-hijau/15 p-4">
-          <input name="nama" className="input" placeholder="Nama" required aria-label="Nama" />
-          <input name="peran" className="input" placeholder="Peran, mis. Pendiri" aria-label="Peran" />
-          <textarea name="biografi" rows="3" className="input !py-3" placeholder="Biografi singkat" aria-label="Biografi" />
-          <input name="foto_url" type="url" className="input" placeholder="Alamat foto (https://…), opsional" aria-label="Alamat foto" />
-          <input name="urutan" type="number" className="input" placeholder="Urutan tampil (1, 2, …)" aria-label="Urutan" />
-        </FormAksi>
-      </Kotak>
+      <p className="kartu text-sm text-tinta/80">Foto, biografi, dan profil <b>pendiri</b> serta <b>pengajar</b> kini diatur di menu <a className="font-medium text-hijau underline" href="/admin/profil">Profil Publik</a>.</p>
     </div>
   );
 }
