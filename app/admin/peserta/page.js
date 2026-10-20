@@ -23,7 +23,7 @@ export default async function DaftarPeserta({ searchParams }) {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-hijau-tua">Peserta ({baris.length})</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold text-hijau-tua">Peserta ({baris.length})</h1><Link href="/admin/peserta/baru" className="btn-kuning !min-h-[44px] !px-5 text-sm">+ Tambah peserta</Link></div>
       <form className="kartu grid gap-3 sm:grid-cols-4" method="get">
         <input name="q" defaultValue={q} placeholder="Cari nama…" className="input sm:col-span-2" aria-label="Cari nama" />
         <select name="jk" defaultValue={jk} className="input" aria-label="Jenis kelamin"><option value="">Ikhwan &amp; Akhwat</option><option>Ikhwan</option><option>Akhwat</option></select>
