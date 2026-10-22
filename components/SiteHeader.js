@@ -5,6 +5,7 @@ export const MENU = [
   { href: "/profil", label: "Profil Rumah Dakwah" },
   { href: "/pendiri", label: "Pendiri" },
   { href: "/pengajar", label: "Pengajar" },
+  { href: "/faidah", label: "Faidah" },
 ];
 
 export default function SiteHeader() {
