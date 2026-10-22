@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { tanggalPendek } from "@/lib/data";
+import TombolGambarFaidah from "@/components/TombolGambarFaidah";
 
 const situs = process.env.NEXT_PUBLIC_SITE_URL || "";
 
@@ -31,6 +32,7 @@ export default function KartuFaidah({ f, gelap = false, lainnya = false }) {
         <a href={tautanWA(f)} target="_blank" rel="noopener noreferrer" className="btn-kuning !min-h-[44px] !px-5 text-sm">Bagikan lewat WhatsApp</a>
         {lainnya && <Link href="/faidah" className={`btn !min-h-[44px] !px-5 text-sm border-2 ${gelap ? "border-white/60 text-white hover:bg-white/10" : "border-hijau text-hijau hover:bg-hijau-muda"}`}>Faidah lainnya</Link>}
       </div>
+      <TombolGambarFaidah f={{ id: f.id, judul: f.judul, teks_arab: f.teks_arab, isi: f.isi, sumber: f.sumber }} gelap={gelap} />
     </article>
   );
 }
