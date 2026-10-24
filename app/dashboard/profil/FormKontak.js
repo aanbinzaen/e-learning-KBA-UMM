@@ -1,11 +1,13 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { simpanKontak } from "./actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 function Simpan() { const { pending } = useFormStatus(); return <button disabled={pending} className="btn-hijau w-full disabled:opacity-60">{pending ? "Menyimpan…" : "Simpan"}</button>; }
 
 export default function FormKontak({ email, whatsapp }) {
   const [state, aksi] = useFormState(simpanKontak, null);
+  useReaksiHasil(state);
   return (
     <form action={aksi} className="space-y-4">
       <div><label className="label" htmlFor="email">Email</label><input id="email" name="email" type="email" defaultValue={email || ""} className="input" autoComplete="email" /></div>

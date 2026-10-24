@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { kirimKuis } from "../actions";
+import { reaksi } from "@/lib/reaksi";
 
 const HURUF = "ABCDE";
 
@@ -73,7 +74,8 @@ export default function KerjakanKuis({ kuisId, soal, awal, bolehUlang }) {
     setGalat("");
     mulai(async () => {
       const r = await kirimKuis(kuisId, jawab);
-      if (r.galat) return setGalat(r.galat);
+      if (r.galat) { reaksi("galat"); return setGalat(r.galat); }
+      reaksi("sukses");
       setHasil(r);
       window.scrollTo({ top: 0, behavior: "smooth" });
     });

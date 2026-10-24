@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { simpanMateriPdf } from "@/app/guru/actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 const BATAS = 20 * 1024 * 1024;
 
@@ -11,6 +12,7 @@ export default function FormPdf({ pertemuanId, grupId }) {
   const [pesan, setPesan] = useState(null);
   const formRef = useRef(null);
   const router = useRouter();
+  useReaksiHasil(pesan);
 
   async function kirim(e) {
     e.preventDefault();

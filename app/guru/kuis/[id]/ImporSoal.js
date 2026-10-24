@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { parseTeks, dariBaris, CONTOH_TEKS, KOLOM_TEMPLATE, CONTOH_BARIS } from "@/lib/soal";
 import { imporSoal } from "@/app/guru/actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 const rapikan = (h) => String(h ?? "").replace(/^\uFEFF/, "").trim().toLowerCase().replace(/\s+/g, "_");
 
@@ -34,6 +35,7 @@ export default function ImporSoal({ kuisId }) {
   const [pesan, setPesan] = useState(null);
   const [sibuk, setSibuk] = useState(false);
   const router = useRouter();
+  useReaksiHasil(pesan);
   const valid = (daftar || []).filter((d) => d.nilai);
 
   async function pilihBerkas(e) {

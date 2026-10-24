@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MENU } from "./SiteHeader";
 import { SITE, linkWA } from "@/lib/config";
+import PengaturanReaksi from "@/components/PengaturanReaksi";
 
 export default function SiteFooter() {
   const wa = linkWA();
@@ -32,6 +33,7 @@ export default function SiteFooter() {
       </div>
       <div className="border-t border-white/15 px-5 py-4 text-center text-sm text-white/80">
         © 2026 Rumah Dakwah Malang &amp; Pesantren Online
+        <div className="mt-3"><PengaturanReaksi /></div>
       </div>
     </footer>
   );

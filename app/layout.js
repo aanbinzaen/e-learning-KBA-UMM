@@ -2,6 +2,7 @@ import { Poppins, Amiri } from "next/font/google";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import ReaksiGlobal from "@/components/ReaksiGlobal";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-poppins", display: "swap" });
 const amiri = Amiri({ subsets: ["arabic", "latin"], weight: ["400", "700"], variable: "--font-amiri", display: "swap" });
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id" className={`${poppins.variable} ${amiri.variable}`}>
       <body className="flex min-h-screen flex-col">
+        <ReaksiGlobal />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

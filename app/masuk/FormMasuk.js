@@ -2,6 +2,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { useState } from "react";
 import { masuk } from "./actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 function Kirim() {
   const { pending } = useFormStatus();
@@ -11,6 +12,7 @@ function Kirim() {
 export default function FormMasuk() {
   const [state, aksi] = useFormState(masuk, null);
   const [lihat, setLihat] = useState(false);
+  useReaksiHasil(state);
   return (
     <form action={aksi} className="space-y-4" noValidate>
       <div>

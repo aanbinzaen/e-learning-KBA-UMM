@@ -2,6 +2,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { useState, useTransition } from "react";
 import { simpanPeserta, resetPassword } from "./actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 function Simpan() {
   const { pending } = useFormStatus();
@@ -12,6 +13,8 @@ export default function FormPeserta({ p, grupId, daftarGrup }) {
   const [state, aksi] = useFormState(simpanPeserta.bind(null, p.id), null);
   const [reset, setReset] = useState(null);
   const [sibuk, mulai] = useTransition();
+  useReaksiHasil(state);
+  useReaksiHasil(reset);
   return (
     <div className="space-y-5">
       <form action={aksi} className="kartu space-y-4">

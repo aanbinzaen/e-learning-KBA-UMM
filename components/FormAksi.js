@@ -1,6 +1,7 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { useEffect, useRef } from "react";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 function Kirim({ label, kelas }) {
   const { pending } = useFormStatus();
@@ -10,6 +11,7 @@ function Kirim({ label, kelas }) {
 export default function FormAksi({ aksi, kirim = "Simpan", kelasTombol = "btn-hijau w-full", reset = false, className = "space-y-4", children }) {
   const [state, jalankan] = useFormState(aksi, null);
   const ref = useRef(null);
+  useReaksiHasil(state);
   useEffect(() => { if (state?.ok && reset) ref.current?.reset(); }, [state, reset]);
   return (
     <form ref={ref} action={jalankan} className={className}>

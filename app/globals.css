@@ -10,7 +10,7 @@
 }
 @layer components {
   .arab { @apply font-arab; direction: rtl; unicode-bidi: isolate; line-height: 1.9; }
-  .btn { @apply inline-flex min-h-[48px] items-center justify-center rounded-2xl px-6 text-base font-semibold transition-colors; }
+  .btn { @apply inline-flex min-h-[48px] items-center justify-center rounded-2xl px-6 text-base font-semibold transition duration-100 active:scale-[0.96] active:brightness-90; }
   .btn-kuning { @apply btn bg-kuning text-hijau-tua hover:bg-jingga hover:text-white; }
   .btn-hijau { @apply btn bg-hijau text-white hover:bg-hijau-tua; }
   .btn-garis { @apply btn border-2 border-white/70 text-white hover:bg-white/10; }

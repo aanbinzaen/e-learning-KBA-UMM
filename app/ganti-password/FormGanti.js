@@ -1,6 +1,7 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { gantiPassword } from "./actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 function Kirim() {
   const { pending } = useFormStatus();
@@ -8,6 +9,7 @@ function Kirim() {
 }
 export default function FormGanti() {
   const [state, aksi] = useFormState(gantiPassword, null);
+  useReaksiHasil(state);
   return (
     <form action={aksi} className="space-y-4">
       <div><label htmlFor="baru" className="label">Password baru</label>

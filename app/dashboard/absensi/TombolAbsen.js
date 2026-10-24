@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { isiAbsensi } from "./actions";
+import { useReaksiHasil } from "@/lib/useReaksi";
 
 const PILIHAN = [
   ["hadir", "Hadir", "btn-kuning w-full !min-h-[56px] text-lg"],
@@ -13,6 +14,7 @@ export default function TombolAbsen({ pertemuanId, awal, dikunci }) {
   const [status, setStatus] = useState(awal);
   const [pesan, setPesan] = useState(null);
   const [sibuk, mulai] = useTransition();
+  useReaksiHasil(pesan);
 
   if (dikunci) return <p className="rounded-2xl bg-white/15 px-4 py-3 font-medium">Dicatat oleh pengajar: {NAMA[awal]}</p>;
 

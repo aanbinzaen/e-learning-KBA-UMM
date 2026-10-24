@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { pratinjau, impor } from "./actions";
+import { reaksi } from "@/lib/reaksi";
 
 const KOLOM = ["jenis_kelamin", "nama_lengkap", "kelas", "grup", "pengajar", "email", "whatsapp"];
 const WARNA = { baru: "bg-hijau-muda text-hijau-tua", duplikat: "bg-yellow-100 text-yellow-800", gagal: "bg-red-100 text-red-700", berhasil: "bg-hijau-muda text-hijau-tua" };
@@ -57,6 +58,7 @@ export default function FormImpor() {
   async function mulai() {
     const rows = mentah.filter((_, i) => hasil[i].status === "baru");
     const semua = [];
+    let gagal = false;
     try {
       for (let i = 0; i < rows.length; i += 15) {
         setSibuk(`Membuat akun ${Math.min(i + 15, rows.length)} dari ${rows.length}…`);
@@ -64,8 +66,8 @@ export default function FormImpor() {
         if (r.galat) throw new Error(r.galat);
         semua.push(...r.hasil);
       }
-    } catch (err) { setGalat(err.message); }
-    setLaporan(semua); setSibuk("");
+    } catch (err) { setGalat(err.message); gagal = true; }
+    setLaporan(semua); setSibuk(""); reaksi(gagal ? "galat" : "sukses");
   }
 
   const hitung = (s) => (hasil || []).filter((h) => h.status === s).length;
