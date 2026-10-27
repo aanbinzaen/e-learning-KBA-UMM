@@ -14,7 +14,7 @@ export default async function DashboardLayout({ children }) {
   if (profil.wajib_ganti_password) redirect("/ganti-password");
   const nav = [
     ["/dashboard", "Dashboard"],
-    ...(profil.role === "peserta" ? [["/dashboard/kelas", "Kelas"], ["/dashboard/absensi", "Absensi"]] : [["/guru", "Kelola Kelas"]]),
+    ...(profil.role === "peserta" ? [["/dashboard/kelas", "Kelas"], ["/dashboard/absensi", "Absensi"]] : [["/guru", "Kelola Kelas"], ["/dashboard/kelas", "Lihat Kelas"]]),
     ["/dashboard/profil", "Profil Saya"],
     ...(profil.role === "admin" ? [["/admin", "Admin"]] : []),
   ];

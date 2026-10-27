@@ -42,7 +42,16 @@ export default async function Dashboard() {
                   : <p className="rounded-2xl bg-hijau-muda p-3 text-sm">Link kelas belum diisi pengajar atau admin.</p>}
         </section>
       ) : (
-        <section className="kartu"><p className="text-sm">{p?.role === "peserta" ? "Anda belum ditempatkan di grup. Hubungi admin." : "Fitur untuk peran ini akan hadir di tahap berikutnya."}</p></section>
+        <section className="kartu space-y-3">
+          {p?.role === "peserta" ? <p className="text-sm">Anda belum ditempatkan di grup. Hubungi admin.</p> : (
+            <>
+              <p className="text-sm">Anda dapat membuka dan mengelola kelas dari menu berikut.</p>
+              <Link href="/guru" className="btn-hijau w-full">Kelola Kelas</Link>
+              <Link href="/dashboard/kelas" className="btn-garis !border-hijau !text-hijau w-full">Lihat Kelas (tampilan peserta)</Link>
+              {p?.role === "admin" && <Link href="/admin" className="btn-kuning w-full">Menu Admin</Link>}
+            </>
+          )}
+        </section>
       )}
 
       {grup && (

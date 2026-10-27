@@ -8,7 +8,8 @@ import TombolSelesai from "../TombolSelesai";
 export const metadata = { title: "Pertemuan" };
 
 export default async function DetailKelas({ params }) {
-  const { supabase, user } = await ambilSesi();
+  const { supabase, user, profil } = await ambilSesi();
+  const kelola = profil.role !== "peserta";
   const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan").eq("id", params.id).maybeSingle();
   if (!p) notFound();
   const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }, { data: kuis }, { data: perc }] = await Promise.all([
@@ -33,6 +34,7 @@ export default async function DetailKelas({ params }) {
         <h1 className="text-2xl font-bold">{p.judul}</h1>
         <p className="mt-1 text-white/90">{tanggalIndo(p.waktu)}</p>
         {p.keterangan && <p className="mt-3 text-sm text-white/90">{p.keterangan}</p>}
+        {kelola && <Link href={`/guru/pertemuan/${p.id}`} className="btn-garis mt-4 w-full">Kelola pertemuan ini</Link>}
         {tautan?.link && <a href={tautan.link} target="_blank" rel="noopener noreferrer" className="btn-kuning mt-4 w-full">Gabung Kelas</a>}
       </header>
 
@@ -67,7 +69,7 @@ export default async function DetailKelas({ params }) {
           <article key={q.id} className="kartu space-y-2">
             <h3 className="font-semibold">{q.judul}</h3>
             <p className="text-sm text-tinta/70">{terbaik[q.id] !== undefined ? `Nilai terbaik: ${terbaik[q.id]}` : menunggu[q.id] ? "Menunggu penilaian pengajar" : "Belum dikerjakan"}</p>
-            <Link href={`/dashboard/kuis/${q.id}`} className="btn-hijau w-full">{terbaik[q.id] !== undefined || menunggu[q.id] ? "Lihat hasil" : "Kerjakan kuis"}</Link>
+            <Link href={kelola ? `/guru/kuis/${q.id}` : `/dashboard/kuis/${q.id}`} className="btn-hijau w-full">{kelola ? "Kelola kuis" : terbaik[q.id] !== undefined || menunggu[q.id] ? "Lihat hasil" : "Kerjakan kuis"}</Link>
           </article>
         ))}
         {!kuis?.length && <p className="kartu text-tinta/70">Belum ada kuis untuk pertemuan ini.</p>}
