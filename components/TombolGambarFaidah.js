@@ -4,11 +4,12 @@ import { buatGambarFaidah, FORMAT } from "@/lib/gambarFaidah";
 
 const slug = (t) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "faidah";
 
-export default function TombolGambarFaidah({ f, gelap = false }) {
+export default function TombolGambarFaidah({ f, gelap = false, pratinjau = false }) {
   const [fmt, setFmt] = useState("potret");
   const [sibuk, setSibuk] = useState(false);
   const [galat, setGalat] = useState("");
   const [bisaBagi, setBisaBagi] = useState(false);
+  const [lihat, setLihat] = useState("");
 
   useEffect(() => {
     try { setBisaBagi(!!(navigator.canShare && navigator.canShare({ files: [new File([""], "a.png", { type: "image/png" })] }))); } catch { /* tidak didukung */ }
@@ -32,6 +33,15 @@ export default function TombolGambarFaidah({ f, gelap = false }) {
     setSibuk(false);
   }
 
+  async function tampilkan() {
+    setSibuk(true); setGalat("");
+    try {
+      const kanvas = await buatGambarFaidah(f, fmt, { situs: process.env.NEXT_PUBLIC_SITE_URL });
+      setLihat(kanvas.toDataURL("image/jpeg", 0.8));
+    } catch { setGalat("Pratinjau gagal dibuat."); }
+    setSibuk(false);
+  }
+
   async function bagikan() {
     setSibuk(true); setGalat("");
     try {
@@ -51,9 +61,17 @@ export default function TombolGambarFaidah({ f, gelap = false }) {
           {Object.entries(FORMAT).map(([k, v]) => <option key={k} value={k} className="text-tinta">{v.label}</option>)}
         </select>
         <button type="button" onClick={unduh} disabled={sibuk} className={tombol}>{sibuk ? "Membuat gambar…" : "Unduh gambar"}</button>
+        {pratinjau && <button type="button" onClick={tampilkan} disabled={sibuk} className={tombol}>Lihat pratinjau</button>}
         {bisaBagi && <button type="button" onClick={bagikan} disabled={sibuk} className={tombol}>Bagikan gambar</button>}
       </div>
       {galat && <p role="alert" className="mt-3 text-sm text-red-300">{galat}</p>}
+      {lihat && (
+        <div className="mt-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lihat} alt="Pratinjau flyer faidah" className="mx-auto max-h-[28rem] w-auto max-w-full rounded-xl shadow" />
+          <button type="button" onClick={() => setLihat("")} className="mt-2 text-sm font-medium text-hijau underline">Tutup pratinjau</button>
+        </div>
+      )}
     </div>
   );
 }

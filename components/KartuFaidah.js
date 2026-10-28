@@ -7,7 +7,7 @@ const situs = process.env.NEXT_PUBLIC_SITE_URL || "";
 // Tautan bagikan ke WhatsApp (judul, kutipan Arab, isi ringkas, sumber, alamat situs)
 function tautanWA(f) {
   const isi = f.isi.length > 1200 ? `${f.isi.slice(0, 1200)}…` : f.isi;
-  const teks = [`*${f.judul}*`, f.teks_arab, isi, f.sumber ? `Sumber: ${f.sumber}` : null, situs ? `${situs}/faidah` : null].filter(Boolean).join("\n\n");
+  const teks = [`*${f.judul}*`, f.teks_arab, isi, f.sumber ? `Sumber: ${f.sumber}` : null, f.penulis ? `Disampaikan oleh ${f.penulis}` : null, situs ? `${situs}/faidah` : null].filter(Boolean).join("\n\n");
   return `https://wa.me/?text=${encodeURIComponent(teks)}`;
 }
 const paragraf = (t) => String(t || "").split(/\n{2,}/).map((x) => x.trim()).filter(Boolean);
@@ -28,11 +28,12 @@ export default function KartuFaidah({ f, gelap = false, lainnya = false }) {
         {paragraf(f.isi).map((t, i) => <p key={i} className="whitespace-pre-line" dir="auto">{t}</p>)}
       </div>
       {f.sumber && <p className={`mt-6 border-t pt-4 text-sm font-medium ${w.sumber}`}>Sumber: {f.sumber}</p>}
+      {f.penulis && <p className={`mt-2 text-sm ${w.tgl}`}>Disampaikan oleh {f.penulis}</p>}
       <div className="mt-6 flex flex-wrap gap-3">
         <a href={tautanWA(f)} target="_blank" rel="noopener noreferrer" className="btn-kuning !min-h-[44px] !px-5 text-sm">Bagikan lewat WhatsApp</a>
         {lainnya && <Link href="/faidah" className={`btn !min-h-[44px] !px-5 text-sm border-2 ${gelap ? "border-white/60 text-white hover:bg-white/10" : "border-hijau text-hijau hover:bg-hijau-muda"}`}>Faidah lainnya</Link>}
       </div>
-      <TombolGambarFaidah f={{ id: f.id, judul: f.judul, teks_arab: f.teks_arab, isi: f.isi, sumber: f.sumber }} gelap={gelap} />
+      <TombolGambarFaidah f={{ id: f.id, judul: f.judul, teks_arab: f.teks_arab, isi: f.isi, sumber: f.sumber, penulis: f.penulis }} gelap={gelap} />
     </article>
   );
 }
