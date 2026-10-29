@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, CONTOH_DIAGRAM, CONTOH_CATATAN } from "@/lib/diagram";
+import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, DAFTAR_RATA, CONTOH_DIAGRAM, CONTOH_CATATAN } from "@/lib/diagram";
 
 const CONTOH_ARAB = "الكلام | قول مفيد\n  الاسم\n    مرفوع\n    منصوب\n    مجرور\n  الفعل\n    ماض\n    مضارع\n    أمر\n  الحرف";
 const slug = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "hierarki";
@@ -10,6 +10,7 @@ export default function PembuatDiagram() {
   const [judul, setJudul] = useState("Pembagian Kata dalam Bahasa Arab");
   const [teks, setTeks] = useState(CONTOH_DIAGRAM);
   const [catatan, setCatatan] = useState(CONTOH_CATATAN);
+  const [rata, setRata] = useState("otomatis");
   const [ukuran, setUkuran] = useState("lanskap169");
   const [tata, setTata] = useState("otomatis");
   const [tema, setTema] = useState("terang");
@@ -20,7 +21,7 @@ export default function PembuatDiagram() {
   const [bisaBagi, setBisaBagi] = useState(false);
   const kanvasRef = useRef(null);
   const urutan = useRef(0);
-  const opsiDasar = { judul, ukuran, tata, tema, catatan, situs: process.env.NEXT_PUBLIC_SITE_URL };
+  const opsiDasar = { judul, ukuran, tata, tema, catatan, rataCatatan: rata, situs: process.env.NEXT_PUBLIC_SITE_URL };
 
   useEffect(() => {
     try { setBisaBagi(!!(navigator.canShare && navigator.canShare({ files: [new File([""], "a.png", { type: "image/png" })] }))); } catch { /* tidak didukung */ }
@@ -43,7 +44,7 @@ export default function PembuatDiagram() {
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teks, judul, catatan, ukuran, tata, tema]);
+  }, [teks, judul, catatan, rata, ukuran, tata, tema]);
 
   async function buatBlob() {
     const h = bacaDiagram(teks, judul);
@@ -96,7 +97,11 @@ export default function PembuatDiagram() {
       <section className="kartu">
         <label className="label" htmlFor="cat-dg">Keterangan diagram (opsional)</label>
         <textarea id="cat-dg" rows="3" dir="auto" value={catatan} onChange={(e) => setCatatan(e.target.value)} maxLength={600} className="input !py-3" placeholder="Catatan singkat yang tampil di bagian bawah gambar, misalnya penjelasan atau sumber materi." />
-        <p className="mt-1 text-xs text-tinta/60">Tampil sebagai kotak catatan di atas pita bawah. Maksimal sekitar 5 baris.</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <label className="text-sm font-medium" htmlFor="rata-dg">Rata tulisan keterangan</label>
+          <select id="rata-dg" value={rata} onChange={(e) => setRata(e.target.value)} className="input !w-auto">{DAFTAR_RATA.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        </div>
+        <p className="mt-2 text-xs text-tinta/60">Tampil sebagai kotak catatan di atas pita bawah, maksimal sekitar 5 baris. Boleh memuat kalimat Indonesia dan kata Arab sekaligus.</p>
       </section>
 
       <section className="kartu grid gap-4 sm:grid-cols-2">
