@@ -1,6 +1,7 @@
 import { wajibAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import FormAksi from "@/components/FormAksi";
+import PilihTarget from "./PilihTarget";
 import { siarkanNotifikasi } from "./actions";
 
 export const metadata = { title: "Notifikasi" };
@@ -8,11 +9,15 @@ export const metadata = { title: "Notifikasi" };
 export default async function Notifikasi() {
   const { supabase } = await wajibAdmin();
   const db = supabaseAdmin();
-  const [{ data: langganan, error }, { data: grup }, { count: peserta }] = await Promise.all([
+  const [{ data: langganan, error }, { data: grup }, { data: anggota }] = await Promise.all([
     db.from("push_langganan").select("profile_id").limit(5000),
     supabase.from("grup").select("id,nama,kelas(jenis_kelamin,tingkat)").order("nama"),
-    supabase.from("peserta_grup").select("profile_id", { count: "exact", head: true }),
+    supabase.from("peserta_grup").select("grup_id").limit(5000),
   ]);
+  const peserta = anggota?.length || 0;
+  const jumlahGrup = {}; (anggota || []).forEach((a) => { jumlahGrup[a.grup_id] = (jumlahGrup[a.grup_id] || 0) + 1; });
+  const daftarGrup = [...(grup || [])].map((g) => ({ id: g.id, nama: g.nama, jk: g.kelas?.jenis_kelamin, tingkat: g.kelas?.tingkat, jumlah: jumlahGrup[g.id] || 0 }))
+    .sort((a, b) => `${a.tingkat}${a.nama}`.localeCompare(`${b.tingkat}${b.nama}`, "id"));
   const perangkat = langganan?.length || 0, pengguna = new Set((langganan || []).map((x) => x.profile_id)).size;
 
   return (
@@ -31,9 +36,7 @@ export default async function Notifikasi() {
         <FormAksi aksi={siarkanNotifikasi} kirim="Kirim notifikasi" reset>
           <div><label className="label" htmlFor="judul">Judul (tampil tebal)</label><input id="judul" name="judul" maxLength={80} className="input" placeholder="Pengingat kelas malam ini" required /></div>
           <div><label className="label" htmlFor="isi">Isi pesan</label><textarea id="isi" name="isi" rows="3" maxLength={160} className="input !py-3" placeholder="Kelas dimulai pukul 20.00 WIB. Jangan lupa hadir." /></div>
-          <div><label className="label" htmlFor="target">Kirim kepada</label>
-            <select id="target" name="target" className="input" defaultValue="semua"><option value="semua">Semua pengguna</option>
-              {(grup || []).map((g) => <option key={g.id} value={g.id}>Peserta {g.kelas?.jenis_kelamin} · {g.nama}</option>)}</select></div>
+          <PilihTarget grup={daftarGrup} />
           <div><label className="label" htmlFor="url">Halaman yang dibuka saat diketuk (opsional)</label><input id="url" name="url" className="input" placeholder="/dashboard/kelas" /></div>
         </FormAksi>
       </section>
