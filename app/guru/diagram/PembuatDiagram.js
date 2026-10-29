@@ -17,6 +17,12 @@ export default function PembuatDiagram() {
   const [gayaKet, setGayaKet] = useState("otomatis");
   const [gayaCatatan, setGayaCatatan] = useState("otomatis");
   const [rataKotak, setRataKotak] = useState("tengah");
+  const [ukNama, setUkNama] = useState(100);
+  const [ukKet, setUkKet] = useState(100);
+  const [ukCatatan, setUkCatatan] = useState(100);
+  const [ukJudul, setUkJudul] = useState(100);
+  const [jarak, setJarak] = useState("normal");
+  const [ukuranTeks, setUkuranTeks] = useState("otomatis");
   const [ukuran, setUkuran] = useState("lanskap169");
   const [tata, setTata] = useState("otomatis");
   const [tema, setTema] = useState("terang");
@@ -29,7 +35,7 @@ export default function PembuatDiagram() {
   const isiRef = useRef(null);
   const catRef = useRef(null);
   const urutan = useRef(0);
-  const opsiDasar = { judul, ukuran, tata, tema, catatan, rataCatatan: rata, gayaNama, gayaKet, gayaCatatan, rataKotak, situs: process.env.NEXT_PUBLIC_SITE_URL };
+  const opsiDasar = { judul, ukuran, tata, tema, catatan, rataCatatan: rata, gayaNama, gayaKet, gayaCatatan, rataKotak, ukNama, ukKet, ukCatatan, ukJudul, jarak, ukuranTeks, situs: process.env.NEXT_PUBLIC_SITE_URL };
 
   useEffect(() => {
     try { setBisaBagi(!!(navigator.canShare && navigator.canShare({ files: [new File([""], "a.png", { type: "image/png" })] }))); } catch { /* tidak didukung */ }
@@ -47,12 +53,12 @@ export default function PembuatDiagram() {
         const c = kanvasRef.current;
         c.width = r.kanvas.width; c.height = r.kanvas.height;
         c.getContext("2d").drawImage(r.kanvas, 0, 0);
-        setGalat(""); setInfo({ jumlah: h.jumlah, jenjang: h.jenjang, arah: r.arah, skala: r.skala });
+        setGalat(""); setInfo({ jumlah: h.jumlah, jenjang: h.jenjang, arah: r.arah, skala: r.skala, pxNama: r.pxNama, pxKet: r.pxKet, rujukan: r.rujukan, terpotong: r.terpotong });
       } catch { if (id === urutan.current) setGalat("Pratinjau gagal dibuat."); }
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teks, judul, catatan, rata, gayaNama, gayaKet, gayaCatatan, rataKotak, ukuran, tata, tema]);
+  }, [teks, judul, catatan, rata, gayaNama, gayaKet, gayaCatatan, rataKotak, ukNama, ukKet, ukCatatan, ukJudul, jarak, ukuranTeks, ukuran, tata, tema]);
 
   async function buatBlob() {
     const h = bacaDiagram(teks, judul);
@@ -130,6 +136,31 @@ export default function PembuatDiagram() {
         <p className="text-xs leading-relaxed text-tinta/60">Pilihan <b>Otomatis</b> memakai gaya bawaan. Gaya <b>miring</b> hanya berlaku untuk tulisan Latin; huruf Arab tetap tegak. Tulisan yang Anda blok dengan Ctrl+B atau Ctrl+I ditambahkan pada pilihan di sini.</p>
       </section>
 
+      <section className="kartu space-y-4">
+        <h2 className="text-lg font-semibold text-hijau">Ukuran tulisan</h2>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Ukuran tulisan">
+          {[["otomatis", "Otomatis (terbesar yang muat)"], ["kecil", "Kecil"], ["sedang", "Sedang"], ["besar", "Besar"], ["sangat", "Sangat besar"]].map(([k, l]) => (
+            <button key={k} type="button" role="radio" aria-checked={ukuranTeks === k} onClick={() => setUkuranTeks(k)}
+              className={`min-h-[44px] rounded-2xl border-2 px-4 text-sm font-medium ${ukuranTeks === k ? "border-hijau bg-hijau text-white" : "border-hijau/25 text-hijau hover:bg-hijau-muda"}`}>{l}</button>
+          ))}
+        </div>
+        <p className="text-xs leading-relaxed text-tinta/60"><b>Otomatis</b> memperbesar tulisan sampai gambar penuh. <b>Kecil sampai Sangat besar</b> memakai ukuran tetap: tulisan tidak diperbesar otomatis, dan hanya dikecilkan bila isinya tidak muat (kolom Pratinjau memberi tahu bila itu terjadi). Geser di bawah untuk menyesuaikan tiap bagian.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+        <div><label className="label" htmlFor="uk-n">Nama butir: {ukNama}%</label>
+          <input id="uk-n" type="range" min="60" max="220" step="5" value={ukNama} onChange={(e) => setUkNama(Number(e.target.value))} className="w-full accent-[#1E7B34]" /></div>
+        <div><label className="label" htmlFor="uk-k">Keterangan di dalam kotak: {ukKet}%</label>
+          <input id="uk-k" type="range" min="60" max="220" step="5" value={ukKet} onChange={(e) => setUkKet(Number(e.target.value))} className="w-full accent-[#1E7B34]" /></div>
+        <div><label className="label" htmlFor="uk-c">Keterangan diagram (kotak bawah): {ukCatatan}%</label>
+          <input id="uk-c" type="range" min="60" max="220" step="5" value={ukCatatan} onChange={(e) => setUkCatatan(Number(e.target.value))} className="w-full accent-[#1E7B34]" /></div>
+        <div><label className="label" htmlFor="uk-j">Judul diagram: {ukJudul}%</label>
+          <input id="uk-j" type="range" min="60" max="150" step="5" value={ukJudul} onChange={(e) => setUkJudul(Number(e.target.value))} className="w-full accent-[#1E7B34]" /></div>
+        </div>
+        <div><label className="label" htmlFor="jr-dg">Jarak antar kotak</label>
+          <select id="jr-dg" value={jarak} onChange={(e) => setJarak(e.target.value)} className="input sm:!w-auto"><option value="rapat">Rapat (tulisan terasa lebih besar)</option><option value="normal">Normal</option><option value="lega">Lega</option></select></div>
+        <p className="text-xs leading-relaxed text-tinta/60">Bila isinya banyak, tulisan pasti dikecilkan agar seluruh diagram muat. Untuk tulisan lebih besar: kurangi jumlah butir, pilih ukuran gambar yang sesuai bentuk diagram (9:16 untuk diagram tinggi, 16:9 untuk diagram lebar), atau pilih jarak Rapat.</p>
+      </section>
+
       <section className="kartu grid gap-4 sm:grid-cols-2">
         <div><label className="label" htmlFor="uk">Ukuran gambar</label>
           <select id="uk" value={ukuran} onChange={(e) => setUkuran(e.target.value)} className={pilih}>{Object.entries(UKURAN).map(([k, v]) => <option key={k} value={k}>{v.label} ({v.w}×{v.h})</option>)}</select></div>
@@ -147,6 +178,18 @@ export default function PembuatDiagram() {
           {info && <p className="text-xs text-tinta/60">{info.jumlah} butir · {info.jenjang} jenjang · tata letak {NAMA_ARAH[info.arah]}</p>}
         </div>
         {galat && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{galat}</p>}
+        {info && (() => {
+          // Gambar 1080 px di HP biasanya diperkecil ±3x, jadi tulisan perlu cukup besar agar nyaman dibaca
+          const rn = info.pxNama / info.rujukan, rk = info.pxKet == null ? 1 : info.pxKet / info.rujukan;
+          const nyaman = rn >= 0.026 && rk >= 0.021, agak = rn >= 0.02 && rk >= 0.016;
+          return (
+            <p role="status" className={`rounded-2xl px-4 py-3 text-sm ${nyaman ? "bg-hijau-muda text-hijau-tua" : agak ? "bg-yellow-50 text-yellow-900" : "bg-red-50 text-red-700"}`}>
+              Tulisan butir ≈ <b>{Math.round(info.pxNama)} px</b>{info.pxKet != null && <> · keterangan ≈ <b>{Math.round(info.pxKet)} px</b></>}.{" "}
+              {nyaman ? "Nyaman dibaca di HP." : agak ? "Agak kecil untuk HP: coba ukuran Besar, kurangi butir, atau ganti ukuran gambar." : "Terlalu kecil untuk HP: kurangi butir, pilih ukuran Besar/Sangat besar, atau ganti ukuran gambar."}
+            </p>
+          );
+        })()}
+        {info?.terpotong && <p className="rounded-2xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900">Keterangan diagram terlalu panjang untuk ukuran huruf ini dan dipotong. Kecilkan ukurannya atau persingkat tulisan.</p>}
         {info && info.skala < 0.45 && <p className="rounded-2xl bg-yellow-50 px-4 py-3 text-sm text-yellow-900">Diagram cukup besar sehingga tulisan jadi kecil. Coba ukuran 16:9 atau 9:16, tata letak lain, atau kurangi jumlah butir.</p>}
         <div className="overflow-hidden rounded-2xl border border-hijau/20 bg-white shadow">
           <canvas ref={kanvasRef} className="block h-auto w-full" aria-label="Pratinjau diagram hierarki" />

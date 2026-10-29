@@ -42,3 +42,10 @@ Bagian "Gaya tulisan" di halaman Diagram:
 - Di dalam kolom, gaya tampak sebagai penanda: `**tebal**`, `*miring*`, `***tebal miring***`, `~reguler~`. Hasil sebenarnya terlihat di pratinjau gambar.
 - Berlaku untuk sebagian kata di tengah kalimat, termasuk kalimat campuran Indonesia dan Arab. Miring hanya untuk huruf Latin.
 - Pilihan di "Gaya tulisan" menjadi gaya dasar; blok Ctrl+B / Ctrl+I ditambahkan di atasnya.
+
+## Ukuran tulisan pada diagram
+- **Otomatis (terbesar yang muat):** tulisan diperbesar sampai gambar penuh. Mesin mencoba beberapa lebar kotak dan memilih yang membuat tulisan paling besar.
+- **Kecil / Sedang / Besar / Sangat besar:** ukuran tetap, tidak diperbesar otomatis; hanya dikecilkan bila isinya tidak muat.
+- Penggeser untuk nama butir, keterangan di kotak, keterangan diagram, dan judul (60% sampai 220%), serta jarak antar kotak (Rapat / Normal / Lega).
+- Kolom Pratinjau menampilkan ukuran tulisan terkecil di gambar (px) beserta penilaian: nyaman, agak kecil, atau terlalu kecil untuk HP.
+- Jarak antarbaris untuk tulisan Arab bertanda baca dilonggarkan agar harakat tidak saling menimpa; pita judul menyesuaikan tinggi judul.
