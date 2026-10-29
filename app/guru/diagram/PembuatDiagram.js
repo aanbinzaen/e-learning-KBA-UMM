@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import BilahFormat from "@/components/BilahFormat";
+import { tombolPintas } from "@/lib/formatTeks";
 import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, DAFTAR_RATA, DAFTAR_GAYA, DAFTAR_RATA_KOTAK, CONTOH_DIAGRAM, CONTOH_CATATAN } from "@/lib/diagram";
 
 const CONTOH_ARAB = "الكلام | قول مفيد\n  الاسم\n    مرفوع\n    منصوب\n    مجرور\n  الفعل\n    ماض\n    مضارع\n    أمر\n  الحرف";
@@ -24,6 +26,8 @@ export default function PembuatDiagram() {
   const [sibuk, setSibuk] = useState(false);
   const [bisaBagi, setBisaBagi] = useState(false);
   const kanvasRef = useRef(null);
+  const isiRef = useRef(null);
+  const catRef = useRef(null);
   const urutan = useRef(0);
   const opsiDasar = { judul, ukuran, tata, tema, catatan, rataCatatan: rata, gayaNama, gayaKet, gayaCatatan, rataKotak, situs: process.env.NEXT_PUBLIC_SITE_URL };
 
@@ -92,16 +96,18 @@ export default function PembuatDiagram() {
               <button type="button" onClick={() => { setTeks(""); setCatatan(""); }} className="underline">Kosongkan</button>
             </span>
           </div>
-          <textarea id="teks-dg" rows="11" dir="auto" value={teks} onChange={(e) => setTeks(e.target.value)} className="input !py-3 font-mono text-sm leading-relaxed" placeholder={"Kalam\n  Isim\n  Fi'il\n    Madhi\n    Mudhari'\n  Harf"} spellCheck={false} />
+          <BilahFormat taRef={isiRef} nilai={teks} setNilai={setTeks} />
+          <textarea id="teks-dg" ref={isiRef} onKeyDown={(e) => tombolPintas(e, isiRef.current, teks, setTeks)} rows="11" dir="auto" value={teks} onChange={(e) => setTeks(e.target.value)} className="input !py-3 font-mono text-sm leading-relaxed" placeholder={"Kalam\n  Isim\n  Fi'il\n    Madhi\n    Mudhari'\n  Harf"} spellCheck={false} />
           <p className="mt-2 text-xs leading-relaxed text-tinta/60">Tandai anak dengan <b>spasi di depan</b> (dua spasi tiap jenjang), atau gunakan nomor <b>1</b>, <b>1.1</b>, <b>1.2.1</b>. Tanda - atau * di depan butir boleh dipakai. Jika ada beberapa butir di jenjang teratas, judul menjadi induknya.</p>
           <p className="mt-2 rounded-2xl bg-hijau-muda px-4 py-3 text-xs leading-relaxed text-hijau-tua"><b>Keterangan di dalam kotak:</b> tambahkan tanda <b>|</b> lalu tulisan singkat, misalnya <span className="font-mono">Isim | kata benda</span>. Tulisan setelah tanda | tampil kecil di bawah nama.</p>
-          <p className="mt-2 rounded-2xl bg-hijau-muda px-4 py-3 text-xs leading-relaxed text-hijau-tua"><b>Gaya huruf per butir:</b> bungkus seluruh nama atau seluruh keterangan dengan <span className="font-mono">**tebal**</span>, <span className="font-mono">*miring*</span>, <span className="font-mono">***tebal miring***</span>, atau <span className="font-mono">~reguler~</span>. Contoh: <span className="font-mono">**Ilmu Nahwu** | *tentang akhir kata*</span></p>
+          <p className="mt-2 rounded-2xl bg-hijau-muda px-4 py-3 text-xs leading-relaxed text-hijau-tua"><b>Tebal dan miring:</b> blok kata atau kalimat, lalu tekan <b>Ctrl+B</b> (tebal) atau <b>Ctrl+I</b> (miring); <b>Ctrl+Spasi</b> menghapus gaya. Di kolom ini gaya tampak sebagai tanda <span className="font-mono">**tebal**</span> dan <span className="font-mono">*miring*</span>; hasilnya terlihat di pratinjau di bawah. Miring hanya untuk tulisan Latin.</p>
         </div>
       </section>
 
       <section className="kartu">
         <label className="label" htmlFor="cat-dg">Keterangan diagram (opsional)</label>
-        <textarea id="cat-dg" rows="3" dir="auto" value={catatan} onChange={(e) => setCatatan(e.target.value)} maxLength={600} className="input !py-3" placeholder="Catatan singkat yang tampil di bagian bawah gambar, misalnya penjelasan atau sumber materi." />
+        <BilahFormat taRef={catRef} nilai={catatan} setNilai={setCatatan} />
+        <textarea id="cat-dg" ref={catRef} onKeyDown={(e) => tombolPintas(e, catRef.current, catatan, setCatatan)} rows="3" dir="auto" value={catatan} onChange={(e) => setCatatan(e.target.value)} maxLength={600} className="input !py-3" placeholder="Catatan singkat yang tampil di bagian bawah gambar, misalnya penjelasan atau sumber materi." />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <label className="text-sm font-medium" htmlFor="rata-dg">Rata tulisan keterangan</label>
           <select id="rata-dg" value={rata} onChange={(e) => setRata(e.target.value)} className="input !w-auto">{DAFTAR_RATA.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
@@ -121,7 +127,7 @@ export default function PembuatDiagram() {
         <div><label className="label" htmlFor="rk-dg">Rata tulisan di dalam kotak</label>
           <select id="rk-dg" value={rataKotak} onChange={(e) => setRataKotak(e.target.value)} className={pilih}>{DAFTAR_RATA_KOTAK.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
         </div>
-        <p className="text-xs leading-relaxed text-tinta/60">Pilihan <b>Otomatis</b> memakai gaya bawaan. Gaya <b>miring</b> hanya berlaku untuk tulisan Latin; huruf Arab tetap tegak. Gaya per butir (tanda ** dan *) mengalahkan pilihan di sini.</p>
+        <p className="text-xs leading-relaxed text-tinta/60">Pilihan <b>Otomatis</b> memakai gaya bawaan. Gaya <b>miring</b> hanya berlaku untuk tulisan Latin; huruf Arab tetap tegak. Tulisan yang Anda blok dengan Ctrl+B atau Ctrl+I ditambahkan pada pilihan di sini.</p>
       </section>
 
       <section className="kartu grid gap-4 sm:grid-cols-2">

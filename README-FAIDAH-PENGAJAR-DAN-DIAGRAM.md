@@ -35,3 +35,10 @@ Bagian "Gaya tulisan" di halaman Diagram:
   Contoh: `**Ilmu Nahwu** | *tentang akhir kata*`. Penanda per butir mengalahkan pilihan global.
 - Gaya miring hanya berlaku untuk tulisan Latin; huruf Arab tetap tegak.
 - Teks campuran Indonesia + Arab: arah dasar mengikuti huruf pertama, kata Arab memakai Amiri, huruf Latin memakai Poppins.
+
+## Tebal dan miring dengan Ctrl+B / Ctrl+I
+- Di kolom isi diagram dan kolom keterangan diagram: blok tulisan (satu kata atau kalimat), lalu tekan **Ctrl+B** (tebal) atau **Ctrl+I** (miring). **Ctrl+Spasi** menghapus gaya. Tombol **B**, **I**, dan **Reguler** di atas kolom melakukan hal yang sama (juga untuk HP).
+- Tekan lagi pada blok yang sama untuk membatalkan. Tanpa blok, kata di bawah kursor yang diformat.
+- Di dalam kolom, gaya tampak sebagai penanda: `**tebal**`, `*miring*`, `***tebal miring***`, `~reguler~`. Hasil sebenarnya terlihat di pratinjau gambar.
+- Berlaku untuk sebagian kata di tengah kalimat, termasuk kalimat campuran Indonesia dan Arab. Miring hanya untuk huruf Latin.
+- Pilihan di "Gaya tulisan" menjadi gaya dasar; blok Ctrl+B / Ctrl+I ditambahkan di atasnya.
