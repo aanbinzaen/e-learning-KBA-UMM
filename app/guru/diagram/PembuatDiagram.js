@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, DAFTAR_RATA, CONTOH_DIAGRAM, CONTOH_CATATAN } from "@/lib/diagram";
+import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, DAFTAR_RATA, DAFTAR_GAYA, DAFTAR_RATA_KOTAK, CONTOH_DIAGRAM, CONTOH_CATATAN } from "@/lib/diagram";
 
 const CONTOH_ARAB = "الكلام | قول مفيد\n  الاسم\n    مرفوع\n    منصوب\n    مجرور\n  الفعل\n    ماض\n    مضارع\n    أمر\n  الحرف";
 const slug = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "hierarki";
@@ -11,6 +11,10 @@ export default function PembuatDiagram() {
   const [teks, setTeks] = useState(CONTOH_DIAGRAM);
   const [catatan, setCatatan] = useState(CONTOH_CATATAN);
   const [rata, setRata] = useState("otomatis");
+  const [gayaNama, setGayaNama] = useState("otomatis");
+  const [gayaKet, setGayaKet] = useState("otomatis");
+  const [gayaCatatan, setGayaCatatan] = useState("otomatis");
+  const [rataKotak, setRataKotak] = useState("tengah");
   const [ukuran, setUkuran] = useState("lanskap169");
   const [tata, setTata] = useState("otomatis");
   const [tema, setTema] = useState("terang");
@@ -21,7 +25,7 @@ export default function PembuatDiagram() {
   const [bisaBagi, setBisaBagi] = useState(false);
   const kanvasRef = useRef(null);
   const urutan = useRef(0);
-  const opsiDasar = { judul, ukuran, tata, tema, catatan, rataCatatan: rata, situs: process.env.NEXT_PUBLIC_SITE_URL };
+  const opsiDasar = { judul, ukuran, tata, tema, catatan, rataCatatan: rata, gayaNama, gayaKet, gayaCatatan, rataKotak, situs: process.env.NEXT_PUBLIC_SITE_URL };
 
   useEffect(() => {
     try { setBisaBagi(!!(navigator.canShare && navigator.canShare({ files: [new File([""], "a.png", { type: "image/png" })] }))); } catch { /* tidak didukung */ }
@@ -44,7 +48,7 @@ export default function PembuatDiagram() {
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teks, judul, catatan, rata, ukuran, tata, tema]);
+  }, [teks, judul, catatan, rata, gayaNama, gayaKet, gayaCatatan, rataKotak, ukuran, tata, tema]);
 
   async function buatBlob() {
     const h = bacaDiagram(teks, judul);
@@ -91,6 +95,7 @@ export default function PembuatDiagram() {
           <textarea id="teks-dg" rows="11" dir="auto" value={teks} onChange={(e) => setTeks(e.target.value)} className="input !py-3 font-mono text-sm leading-relaxed" placeholder={"Kalam\n  Isim\n  Fi'il\n    Madhi\n    Mudhari'\n  Harf"} spellCheck={false} />
           <p className="mt-2 text-xs leading-relaxed text-tinta/60">Tandai anak dengan <b>spasi di depan</b> (dua spasi tiap jenjang), atau gunakan nomor <b>1</b>, <b>1.1</b>, <b>1.2.1</b>. Tanda - atau * di depan butir boleh dipakai. Jika ada beberapa butir di jenjang teratas, judul menjadi induknya.</p>
           <p className="mt-2 rounded-2xl bg-hijau-muda px-4 py-3 text-xs leading-relaxed text-hijau-tua"><b>Keterangan di dalam kotak:</b> tambahkan tanda <b>|</b> lalu tulisan singkat, misalnya <span className="font-mono">Isim | kata benda</span>. Tulisan setelah tanda | tampil kecil di bawah nama.</p>
+          <p className="mt-2 rounded-2xl bg-hijau-muda px-4 py-3 text-xs leading-relaxed text-hijau-tua"><b>Gaya huruf per butir:</b> bungkus seluruh nama atau seluruh keterangan dengan <span className="font-mono">**tebal**</span>, <span className="font-mono">*miring*</span>, <span className="font-mono">***tebal miring***</span>, atau <span className="font-mono">~reguler~</span>. Contoh: <span className="font-mono">**Ilmu Nahwu** | *tentang akhir kata*</span></p>
         </div>
       </section>
 
@@ -102,6 +107,21 @@ export default function PembuatDiagram() {
           <select id="rata-dg" value={rata} onChange={(e) => setRata(e.target.value)} className="input !w-auto">{DAFTAR_RATA.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         </div>
         <p className="mt-2 text-xs text-tinta/60">Tampil sebagai kotak catatan di atas pita bawah, maksimal sekitar 5 baris. Boleh memuat kalimat Indonesia dan kata Arab sekaligus.</p>
+      </section>
+
+      <section className="kartu space-y-3">
+        <h2 className="text-lg font-semibold text-hijau">Gaya tulisan</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+        <div><label className="label" htmlFor="gn-dg">Nama butir (judul di dalam kotak)</label>
+          <select id="gn-dg" value={gayaNama} onChange={(e) => setGayaNama(e.target.value)} className={pilih}>{DAFTAR_GAYA.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <div><label className="label" htmlFor="gk-dg">Keterangan di dalam kotak</label>
+          <select id="gk-dg" value={gayaKet} onChange={(e) => setGayaKet(e.target.value)} className={pilih}>{DAFTAR_GAYA.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <div><label className="label" htmlFor="gc-dg">Keterangan diagram (kotak bawah)</label>
+          <select id="gc-dg" value={gayaCatatan} onChange={(e) => setGayaCatatan(e.target.value)} className={pilih}>{DAFTAR_GAYA.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <div><label className="label" htmlFor="rk-dg">Rata tulisan di dalam kotak</label>
+          <select id="rk-dg" value={rataKotak} onChange={(e) => setRataKotak(e.target.value)} className={pilih}>{DAFTAR_RATA_KOTAK.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        </div>
+        <p className="text-xs leading-relaxed text-tinta/60">Pilihan <b>Otomatis</b> memakai gaya bawaan. Gaya <b>miring</b> hanya berlaku untuk tulisan Latin; huruf Arab tetap tegak. Gaya per butir (tanda ** dan *) mengalahkan pilihan di sini.</p>
       </section>
 
       <section className="kartu grid gap-4 sm:grid-cols-2">

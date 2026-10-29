@@ -26,3 +26,12 @@ Batas: 200 butir, 8 jenjang.
 ## Keterangan pada diagram
 - **Keterangan per kotak:** tambahkan tanda `|` lalu tulisan singkat. Contoh: `Isim | kata benda`. Tulisan setelah tanda `|` tampil kecil di bawah nama (maks. 140 karakter).
 - **Keterangan diagram (catatan umum):** kolom khusus di bawah isi diagram; tampil sebagai kotak catatan di atas pita bawah (maks. sekitar 5 baris). Teks Arab otomatis rata kanan.
+
+## Gaya tulisan dan rata teks pada diagram
+Bagian "Gaya tulisan" di halaman Diagram:
+- Gaya huruf (Otomatis / Reguler / Tebal / Miring / Tebal miring) untuk: nama butir, keterangan di dalam kotak, dan keterangan diagram.
+- Rata tulisan di dalam kotak: tengah, kiri, kanan, atau rata kanan-kiri. Rata keterangan diagram diatur terpisah.
+- Gaya per butir lewat penanda yang membungkus seluruh nama atau seluruh keterangan: `**tebal**`, `*miring*`, `***tebal miring***`, `~reguler~`.
+  Contoh: `**Ilmu Nahwu** | *tentang akhir kata*`. Penanda per butir mengalahkan pilihan global.
+- Gaya miring hanya berlaku untuk tulisan Latin; huruf Arab tetap tegak.
+- Teks campuran Indonesia + Arab: arah dasar mengikuti huruf pertama, kata Arab memakai Amiri, huruf Latin memakai Poppins.
