@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
+import AktifkanNotifikasi from "@/components/AktifkanNotifikasi";
 
 export default async function Dashboard() {
   const supabase = supabaseServer();
@@ -60,6 +61,7 @@ export default async function Dashboard() {
           <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">{teman.map((t) => <li key={t.nama_lengkap} className="py-1">{t.nama_lengkap}</li>)}</ul>
         </section>
       )}
+      <AktifkanNotifikasi />
       {absenBuka > 0 && p?.role === "peserta" && (
         <Link href="/dashboard/absensi" className="block rounded-kartu bg-kuning p-5 text-center text-lg font-bold text-hijau-tua">Absensi sedang dibuka. Ketuk untuk mengisi</Link>
       )}

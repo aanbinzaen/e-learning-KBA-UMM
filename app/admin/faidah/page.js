@@ -14,6 +14,7 @@ function Bidang({ f }) {
       <div><label className="label">Isi faidah (beri baris kosong untuk paragraf baru)</label><textarea name="isi" rows="7" dir="auto" defaultValue={f?.isi || ""} className="input !py-3" required /></div>
       <div><label className="label">Sumber (opsional)</label><input name="sumber" defaultValue={f?.sumber || ""} placeholder="Contoh: Miftah Dar as-Sa'adah, Juz 1/399" className="input" /></div>
       <label className="flex items-center gap-3 font-medium"><input type="checkbox" name="terbit" defaultChecked={f ? f.terbit : true} className="h-6 w-6 accent-[#1E7B34]" /> Terbitkan (tampil di situs)</label>
+      <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="notif" defaultChecked className="h-6 w-6 accent-[#1E7B34]" /> Kirim notifikasi ke HP pengguna</label>
     </>
   );
 }

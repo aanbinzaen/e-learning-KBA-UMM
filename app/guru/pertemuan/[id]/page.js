@@ -6,7 +6,7 @@ import FormAksi from "@/components/FormAksi";
 import TombolHapus from "@/components/TombolHapus";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import FormPdf from "./FormPdf";
-import { buatKuis, ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
+import { kirimPengingat, buatKuis, ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
 
 export default async function DetailPertemuan({ params }) {
   const { supabase } = await wajibGuru();
@@ -40,6 +40,7 @@ export default async function DetailPertemuan({ params }) {
           </form>
           <Link href={`/guru/pertemuan/${p.id}/absensi`} className="btn-kuning">Isi kehadiran manual</Link>
         </div>
+        <FormAksi aksi={kirimPengingat.bind(null, p.id)} kirim="Kirim pengingat ke peserta" kelasTombol="btn-garis !min-h-[44px] !border-hijau !px-4 text-sm !text-hijau" className="space-y-2" />
       </Kotak>
 
       <Kotak judul={`Materi (${materi?.length || 0})`}>

@@ -34,6 +34,7 @@ export default async function Konten() {
         <FormAksi aksi={tambahPengumuman} kirim="Terbitkan" reset className="space-y-3 rounded-2xl border-2 border-hijau/15 p-4">
           <input name="judul" className="input" placeholder="Judul pengumuman" required aria-label="Judul pengumuman" />
           <textarea name="isi" rows="3" className="input !py-3" placeholder="Isi pengumuman" required aria-label="Isi pengumuman" />
+          <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="notif" defaultChecked className="h-6 w-6 accent-[#1E7B34]" /> Kirim notifikasi ke HP pengguna</label>
         </FormAksi>
       </Kotak>
 
@@ -43,6 +44,7 @@ export default async function Konten() {
           <input name="judul" className="input" placeholder="Judul, mis. Kelas Pemula Ikhwan" required aria-label="Judul jadwal" />
           <input name="waktu" type="datetime-local" className="input" required aria-label="Tanggal dan jam (WIB)" />
           <input name="keterangan" className="input" placeholder="Keterangan (opsional)" aria-label="Keterangan" />
+          <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="notif" defaultChecked className="h-6 w-6 accent-[#1E7B34]" /> Kirim notifikasi ke HP pengguna</label>
         </FormAksi>
       </Kotak>
 

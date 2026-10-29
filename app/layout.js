@@ -12,7 +12,9 @@ export const metadata = {
   metadataBase: new URL(situs),
   title: { default: "KB-UMM – Kuliah Bahasa Arab Untuk Meraih Mahabatullah", template: "%s | KB-UMM" },
   description: "Kuliah Bahasa Arab Untuk Meraih Mahabatullah (KB-UMM) oleh Rumah Dakwah Malang dan Pesantren Online. Belajar Bahasa Arab dari pemula hingga lanjutan.",
-  icons: { icon: "/icon.png" },
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.png", apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "KBA-UMM", statusBarStyle: "default" },
   openGraph: {
     title: "KB-UMM – Kuliah Bahasa Arab Untuk Meraih Mahabatullah",
     description: "Program belajar Bahasa Arab Rumah Dakwah Malang dan Pesantren Online.",

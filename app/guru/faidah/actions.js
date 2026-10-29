@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { ambilSesi } from "@/lib/auth";
 import { bersih } from "@/lib/validasi";
+import { kirimPush } from "@/lib/push";
 
 // Semua penulisan memakai sesi pengguna, jadi aturan RLS berlaku: pengajar hanya bisa mengubah faidah miliknya.
 async function sesiGuru() {
@@ -31,17 +32,23 @@ async function namaPenyampai(s) {
 export async function tambahFaidahGuru(_prev, fd) {
   const s = await sesiGuru(); if (!s) return TIDAK;
   const b = baca(fd); if (b.galat) return b;
-  const { error } = await s.supabase.from("faidah").insert({ ...b.nilai, penulis: await namaPenyampai(s) });
+  const penulis = await namaPenyampai(s);
+  const { error } = await s.supabase.from("faidah").insert({ ...b.nilai, penulis });
   if (error) return { galat: "Gagal menyimpan. Pastikan SQL 10 sudah dijalankan, lalu coba lagi." };
-  segarkan(); return { ok: b.nilai.terbit ? "Faidah diterbitkan. Anda bisa mengunduh flyernya di bawah." : "Faidah disimpan sebagai draf." };
+  segarkan();
+  if (b.nilai.terbit && fd.get("notif") === "on") await kirimPush({ topik: "faidah", kecuali: s.user.id, judul: "Faidah ilmu baru", isi: `${b.nilai.judul} · ${penulis}`, url: "/faidah" });
+  return { ok: b.nilai.terbit ? "Faidah diterbitkan. Anda bisa mengunduh flyernya di bawah." : "Faidah disimpan sebagai draf." };
 }
 
 export async function ubahFaidahGuru(id, _prev, fd) {
   const s = await sesiGuru(); if (!s) return TIDAK;
   const b = baca(fd); if (b.galat) return b;
+  const { data: lama } = await s.supabase.from("faidah").select("terbit,penulis").eq("id", id).maybeSingle();
   const { error } = await s.supabase.from("faidah").update(b.nilai).eq("id", id);
   if (error) return { galat: "Gagal menyimpan perubahan." };
-  segarkan(); return { ok: "Perubahan disimpan." };
+  segarkan();
+  if (b.nilai.terbit && lama && !lama.terbit && fd.get("notif") === "on") await kirimPush({ topik: "faidah", kecuali: s.user.id, judul: "Faidah ilmu baru", isi: `${b.nilai.judul}${lama.penulis ? ` · ${lama.penulis}` : ""}`, url: "/faidah" });
+  return { ok: "Perubahan disimpan." };
 }
 
 export async function hapusFaidahGuru(id) {

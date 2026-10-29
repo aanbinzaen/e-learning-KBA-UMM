@@ -6,6 +6,8 @@ import { bersih } from "@/lib/validasi";
 import { dariInputWIB } from "@/lib/waktu";
 import { idYouTube } from "@/lib/youtube";
 import { validasiSoal } from "@/lib/soal";
+import { kirimPush } from "@/lib/push";
+import { tanggalIndo } from "@/lib/data";
 
 // Semua penulisan memakai sesi pengguna, jadi aturan RLS database tetap berlaku
 // (pengajar hanya bisa mengubah grup yang diampunya).
@@ -25,6 +27,10 @@ export async function tambahPertemuan(grupId, _prev, fd) {
   const { data, error } = await s.supabase.from("pertemuan")
     .insert({ grup_id: grupId, judul, waktu, keterangan: bersih(fd.get("keterangan")) || null }).select("id").single();
   if (error) return TIDAK;
+  if (fd.get("notif") === "on") {
+    const { data: g } = await s.supabase.from("grup").select("nama").eq("id", grupId).maybeSingle();
+    await kirimPush({ topik: "kelas", grupId, kecuali: s.user.id, judul: `Pertemuan baru: ${judul}`, isi: `${g?.nama || "Kelas"} · ${tanggalIndo(waktu)}`, url: `/dashboard/kelas/${data.id}` });
+  }
   revalidatePath("/guru");
   redirect(`/guru/pertemuan/${data.id}`);
 }
@@ -96,6 +102,10 @@ export async function hapusRekaman(id, pertemuanId) {
 export async function ubahAbsensiBuka(pertemuanId, buka) {
   const s = await sesiGuru(); if (!s) return;
   await s.supabase.from("pertemuan").update({ absensi_buka: buka }).eq("id", pertemuanId);
+  if (buka) {
+    const { data: p } = await s.supabase.from("pertemuan").select("judul,grup_id").eq("id", pertemuanId).maybeSingle();
+    if (p) await kirimPush({ topik: "kelas", grupId: p.grup_id, kecuali: s.user.id, judul: "Absensi dibuka", isi: `${p.judul} · ketuk untuk mengisi kehadiran`, url: "/dashboard/absensi" });
+  }
   segarkan(pertemuanId);
   revalidatePath("/dashboard/absensi");
 }
@@ -140,8 +150,10 @@ export async function ubahKuis(kuisId, _prev, fd) {
     const { count } = await s.supabase.from("soal").select("id", { count: "exact", head: true }).eq("kuis_id", kuisId);
     if (!count) return { galat: "Tambahkan minimal satu soal sebelum menerbitkan." };
   }
+  const { data: lama } = await s.supabase.from("kuis").select("diterbitkan,grup_id").eq("id", kuisId).maybeSingle();
   const { error } = await s.supabase.from("kuis").update({ judul, diterbitkan: terbit, boleh_ulang: fd.get("boleh_ulang") === "on" }).eq("id", kuisId);
   if (error) return TIDAK;
+  if (terbit && lama && !lama.diterbitkan) await kirimPush({ topik: "kuis", grupId: lama.grup_id, kecuali: s.user.id, judul: "Kuis baru", isi: judul, url: `/dashboard/kuis/${kuisId}` });
   revalidatePath(`/guru/kuis/${kuisId}`); revalidatePath("/dashboard/kelas");
   return { ok: terbit ? "Tersimpan. Kuis terlihat oleh peserta." : "Tersimpan sebagai draf (belum terlihat peserta)." };
 }
@@ -211,8 +223,13 @@ export async function nilaiEsai(percobaanId, kuisId, _prev, fd) {
     if (!Number.isFinite(skor) || skor < 0 || skor > e.bobot) return { galat: `Skor harus antara 0 dan ${e.bobot}.` };
     penilaian[e.id] = { skor, catatan: String(fd.get(`catatan_${e.id}`) || "").trim().slice(0, 1000) };
   }
+  const { data: sebelum } = await s.supabase.from("percobaan").select("profile_id,status").eq("id", percobaanId).maybeSingle();
   const { data, error } = await s.supabase.rpc("nilai_esai", { pid: percobaanId, penilaian });
   if (error || data?.galat) return TIDAK;
+  if (sebelum?.status === "menunggu" && !data.menunggu) {
+    const { data: ku } = await s.supabase.from("kuis").select("judul").eq("id", kuisId).maybeSingle();
+    await kirimPush({ topik: "kuis", profilIds: [sebelum.profile_id], judul: "Nilai kuis sudah keluar", isi: `${ku?.judul || "Kuis"} · nilai ${data.nilai}`, url: `/dashboard/kuis/${kuisId}` });
+  }
   revalidatePath(`/guru/kuis/${kuisId}/nilai`); revalidatePath(`/guru/kuis/${kuisId}`); revalidatePath("/guru/rekap"); revalidatePath("/dashboard/kelas");
   return { ok: data.menunggu ? "Tersimpan. Masih ada esai yang belum diberi skor." : `Tersimpan. Nilai akhir peserta: ${data.nilai}.` };
 }
@@ -221,4 +238,14 @@ export async function hapusSoal(soalId, kuisId) {
   const s = await sesiGuru(); if (!s) return;
   await s.supabase.from("soal").delete().eq("id", soalId);
   revalidatePath(`/guru/kuis/${kuisId}`);
+}
+
+// Pengingat manual ke peserta satu grup untuk pertemuan tertentu
+export async function kirimPengingat(pertemuanId, _prev) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const { data: p } = await s.supabase.from("pertemuan").select("judul,waktu,grup_id,grup(nama)").eq("id", pertemuanId).maybeSingle();
+  if (!p) return TIDAK;
+  const r = await kirimPush({ topik: "kelas", grupId: p.grup_id, kecuali: s.user.id, judul: `Pengingat: ${p.judul}`, isi: `${p.grup?.nama || "Kelas"} · ${tanggalIndo(p.waktu)}`, url: `/dashboard/kelas/${pertemuanId}` });
+  if (r.galat) return { galat: "Notifikasi gagal dikirim. Pastikan SQL 11 sudah dijalankan." };
+  return { ok: `Pengingat dikirim ke ${r.terkirim} perangkat peserta.` };
 }

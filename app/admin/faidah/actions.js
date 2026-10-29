@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { wajibAdmin } from "@/lib/auth";
 import { bersih } from "@/lib/validasi";
+import { kirimPush } from "@/lib/push";
 
 const segarkan = () => ["/", "/faidah", "/admin/faidah"].forEach((p) => revalidatePath(p));
 const GAGAL = { galat: "Gagal menyimpan. Pastikan SQL 09 sudah dijalankan, lalu coba lagi." };
@@ -18,17 +19,24 @@ function baca(fd) {
 }
 
 export async function tambahFaidah(_prev, fd) {
-  const { supabase } = await wajibAdmin();
+  const { supabase, user } = await wajibAdmin();
   const b = baca(fd); if (b.galat) return b;
   const { error } = await supabase.from("faidah").insert(b.nilai);
-  if (error) return GAGAL; segarkan(); return { ok: b.nilai.terbit ? "Faidah diterbitkan." : "Faidah disimpan sebagai draf." };
+  if (error) return GAGAL;
+  segarkan();
+  if (b.nilai.terbit && fd.get("notif") === "on") await kirimPush({ topik: "faidah", kecuali: user.id, judul: "Faidah ilmu baru", isi: b.nilai.judul, url: "/faidah" });
+  return { ok: b.nilai.terbit ? "Faidah diterbitkan." : "Faidah disimpan sebagai draf." };
 }
 
 export async function ubahFaidah(id, _prev, fd) {
-  const { supabase } = await wajibAdmin();
+  const { supabase, user } = await wajibAdmin();
   const b = baca(fd); if (b.galat) return b;
+  const { data: lama } = await supabase.from("faidah").select("terbit").eq("id", id).maybeSingle();
   const { error } = await supabase.from("faidah").update(b.nilai).eq("id", id);
-  if (error) return GAGAL; segarkan(); return { ok: "Perubahan disimpan." };
+  if (error) return GAGAL;
+  segarkan();
+  if (b.nilai.terbit && lama && !lama.terbit && fd.get("notif") === "on") await kirimPush({ topik: "faidah", kecuali: user.id, judul: "Faidah ilmu baru", isi: b.nilai.judul, url: "/faidah" });
+  return { ok: "Perubahan disimpan." };
 }
 
 export async function hapusFaidah(id) {

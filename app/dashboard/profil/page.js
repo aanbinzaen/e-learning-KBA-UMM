@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import FormKontak from "./FormKontak";
+import AktifkanNotifikasi from "@/components/AktifkanNotifikasi";
 
 export const metadata = { title: "Profil Saya" };
 
@@ -19,6 +20,7 @@ export default async function ProfilSaya() {
       <section className="kartu"><h2 className="mb-1 text-lg font-semibold text-hijau">Kontak untuk masuk</h2>
         <p className="mb-4 text-sm text-tinta/70">Kontak Anda tidak ditampilkan kepada peserta lain.</p>
         <FormKontak email={p?.email} whatsapp={p?.whatsapp} /></section>
+      <AktifkanNotifikasi />
       <section className="kartu"><h2 className="mb-2 text-lg font-semibold text-hijau">Password</h2>
         <Link href="/ganti-password" className="btn-garis !border-hijau !text-hijau w-full">Ganti password</Link></section>
     </div>
