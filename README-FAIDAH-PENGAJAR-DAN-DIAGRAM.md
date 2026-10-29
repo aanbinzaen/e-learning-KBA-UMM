@@ -22,3 +22,7 @@ Kalam
 Jenjang = spasi di depan, atau nomor 1 / 1.1 / 1.2.1. Tata letak otomatis memilih yang paling pas;
 bisa juga atas-bawah, kiri-kanan, atau kanan-kiri (Arab). Ukuran: 4:5, 5:4, 9:16, 16:9, 1:1. Kualitas Standar atau HD 2x.
 Batas: 200 butir, 8 jenjang.
+
+## Keterangan pada diagram
+- **Keterangan per kotak:** tambahkan tanda `|` lalu tulisan singkat. Contoh: `Isim | kata benda`. Tulisan setelah tanda `|` tampil kecil di bawah nama (maks. 140 karakter).
+- **Keterangan diagram (catatan umum):** kolom khusus di bawah isi diagram; tampil sebagai kotak catatan di atas pita bawah (maks. sekitar 5 baris). Teks Arab otomatis rata kanan.

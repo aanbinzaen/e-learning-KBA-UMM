@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, CONTOH_DIAGRAM } from "@/lib/diagram";
+import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, CONTOH_DIAGRAM, CONTOH_CATATAN } from "@/lib/diagram";
 
-const CONTOH_ARAB = "الكلام\n  الاسم\n    مرفوع\n    منصوب\n    مجرور\n  الفعل\n    ماض\n    مضارع\n    أمر\n  الحرف";
+const CONTOH_ARAB = "الكلام | قول مفيد\n  الاسم\n    مرفوع\n    منصوب\n    مجرور\n  الفعل\n    ماض\n    مضارع\n    أمر\n  الحرف";
 const slug = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "hierarki";
 const NAMA_ARAH = { v: "atas ke bawah", kk: "kiri ke kanan", rtl: "kanan ke kiri" };
 
 export default function PembuatDiagram() {
   const [judul, setJudul] = useState("Pembagian Kata dalam Bahasa Arab");
   const [teks, setTeks] = useState(CONTOH_DIAGRAM);
+  const [catatan, setCatatan] = useState(CONTOH_CATATAN);
   const [ukuran, setUkuran] = useState("lanskap169");
   const [tata, setTata] = useState("otomatis");
   const [tema, setTema] = useState("terang");
@@ -19,7 +20,7 @@ export default function PembuatDiagram() {
   const [bisaBagi, setBisaBagi] = useState(false);
   const kanvasRef = useRef(null);
   const urutan = useRef(0);
-  const opsiDasar = { judul, ukuran, tata, tema, situs: process.env.NEXT_PUBLIC_SITE_URL };
+  const opsiDasar = { judul, ukuran, tata, tema, catatan, situs: process.env.NEXT_PUBLIC_SITE_URL };
 
   useEffect(() => {
     try { setBisaBagi(!!(navigator.canShare && navigator.canShare({ files: [new File([""], "a.png", { type: "image/png" })] }))); } catch { /* tidak didukung */ }
@@ -42,7 +43,7 @@ export default function PembuatDiagram() {
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teks, judul, ukuran, tata, tema]);
+  }, [teks, judul, catatan, ukuran, tata, tema]);
 
   async function buatBlob() {
     const h = bacaDiagram(teks, judul);
@@ -81,14 +82,21 @@ export default function PembuatDiagram() {
           <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
             <label className="label !mb-0" htmlFor="teks-dg">Isi diagram (satu butir per baris)</label>
             <span className="flex gap-3 text-sm font-medium text-hijau">
-              <button type="button" onClick={() => { setTeks(CONTOH_DIAGRAM); setJudul("Pembagian Kata dalam Bahasa Arab"); }} className="underline">Contoh</button>
-              <button type="button" onClick={() => { setTeks(CONTOH_ARAB); setJudul("أقسام الكلام"); setTata("kanan-kiri"); }} className="underline">Contoh Arab</button>
-              <button type="button" onClick={() => setTeks("")} className="underline">Kosongkan</button>
+              <button type="button" onClick={() => { setTeks(CONTOH_DIAGRAM); setJudul("Pembagian Kata dalam Bahasa Arab"); setCatatan(CONTOH_CATATAN); }} className="underline">Contoh</button>
+              <button type="button" onClick={() => { setTeks(CONTOH_ARAB); setJudul("أقسام الكلام"); setCatatan("ينقسم الكلام إلى ثلاثة أقسام."); setTata("kanan-kiri"); }} className="underline">Contoh Arab</button>
+              <button type="button" onClick={() => { setTeks(""); setCatatan(""); }} className="underline">Kosongkan</button>
             </span>
           </div>
           <textarea id="teks-dg" rows="11" dir="auto" value={teks} onChange={(e) => setTeks(e.target.value)} className="input !py-3 font-mono text-sm leading-relaxed" placeholder={"Kalam\n  Isim\n  Fi'il\n    Madhi\n    Mudhari'\n  Harf"} spellCheck={false} />
           <p className="mt-2 text-xs leading-relaxed text-tinta/60">Tandai anak dengan <b>spasi di depan</b> (dua spasi tiap jenjang), atau gunakan nomor <b>1</b>, <b>1.1</b>, <b>1.2.1</b>. Tanda - atau * di depan butir boleh dipakai. Jika ada beberapa butir di jenjang teratas, judul menjadi induknya.</p>
+          <p className="mt-2 rounded-2xl bg-hijau-muda px-4 py-3 text-xs leading-relaxed text-hijau-tua"><b>Keterangan di dalam kotak:</b> tambahkan tanda <b>|</b> lalu tulisan singkat, misalnya <span className="font-mono">Isim | kata benda</span>. Tulisan setelah tanda | tampil kecil di bawah nama.</p>
         </div>
+      </section>
+
+      <section className="kartu">
+        <label className="label" htmlFor="cat-dg">Keterangan diagram (opsional)</label>
+        <textarea id="cat-dg" rows="3" dir="auto" value={catatan} onChange={(e) => setCatatan(e.target.value)} maxLength={600} className="input !py-3" placeholder="Catatan singkat yang tampil di bagian bawah gambar, misalnya penjelasan atau sumber materi." />
+        <p className="mt-1 text-xs text-tinta/60">Tampil sebagai kotak catatan di atas pita bawah. Maksimal sekitar 5 baris.</p>
       </section>
 
       <section className="kartu grid gap-4 sm:grid-cols-2">
