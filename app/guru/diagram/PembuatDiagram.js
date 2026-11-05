@@ -6,7 +6,7 @@ import { bacaDiagram, buatGambarDiagram, UKURAN, DAFTAR_TEMA, DAFTAR_TATA, DAFTA
 
 const CONTOH_ARAB = "الكلام | قول مفيد\n  الاسم\n    مرفوع\n    منصوب\n    مجرور\n  الفعل\n    ماض\n    مضارع\n    أمر\n  الحرف";
 const slug = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "hierarki";
-const NAMA_ARAH = { v: "atas ke bawah", kk: "kiri ke kanan", rtl: "kanan ke kiri" };
+const NAMA_ARAH = { v: "atas ke bawah", bt: "bawah ke atas", kk: "kiri ke kanan", rtl: "kanan ke kiri" };
 
 export default function PembuatDiagram() {
   const [judul, setJudul] = useState("Pembagian Kata dalam Bahasa Arab");
@@ -53,7 +53,7 @@ export default function PembuatDiagram() {
         const c = kanvasRef.current;
         c.width = r.kanvas.width; c.height = r.kanvas.height;
         c.getContext("2d").drawImage(r.kanvas, 0, 0);
-        setGalat(""); setInfo({ jumlah: h.jumlah, jenjang: h.jenjang, arah: r.arah, skala: r.skala, pxNama: r.pxNama, pxKet: r.pxKet, rujukan: r.rujukan, terpotong: r.terpotong });
+        setGalat(""); setInfo({ jumlah: h.jumlah, jenjang: h.jenjang, arah: r.arah, skala: r.skala, pxNama: r.pxNama, pxKet: r.pxKet, rujukan: r.rujukan, cetak: r.cetak, terpotong: r.terpotong });
       } catch { if (id === urutan.current) setGalat("Pratinjau gagal dibuat."); }
     }, 350);
     return () => clearTimeout(t);
@@ -179,13 +179,17 @@ export default function PembuatDiagram() {
         </div>
         {galat && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{galat}</p>}
         {info && (() => {
-          // Gambar 1080 px di HP biasanya diperkecil ±3x, jadi tulisan perlu cukup besar agar nyaman dibaca
+          // Layar: gambar 1080 px di HP biasanya diperkecil ±3x. Kertas: 150 dpi, 1 px = 0,48 poin.
+          const pt = (px) => Math.round((px * 72) / 150 * 10) / 10;
           const rn = info.pxNama / info.rujukan, rk = info.pxKet == null ? 1 : info.pxKet / info.rujukan;
-          const nyaman = rn >= 0.026 && rk >= 0.021, agak = rn >= 0.02 && rk >= 0.016;
+          const nyaman = info.cetak ? info.pxNama >= 22 && (info.pxKet == null || info.pxKet >= 18) : rn >= 0.026 && rk >= 0.021;
+          const agak = info.cetak ? info.pxNama >= 17 && (info.pxKet == null || info.pxKet >= 14) : rn >= 0.02 && rk >= 0.016;
           return (
             <p role="status" className={`rounded-2xl px-4 py-3 text-sm ${nyaman ? "bg-hijau-muda text-hijau-tua" : agak ? "bg-yellow-50 text-yellow-900" : "bg-red-50 text-red-700"}`}>
-              Tulisan butir ≈ <b>{Math.round(info.pxNama)} px</b>{info.pxKet != null && <> · keterangan ≈ <b>{Math.round(info.pxKet)} px</b></>}.{" "}
-              {nyaman ? "Nyaman dibaca di HP." : agak ? "Agak kecil untuk HP: coba ukuran Besar, kurangi butir, atau ganti ukuran gambar." : "Terlalu kecil untuk HP: kurangi butir, pilih ukuran Besar/Sangat besar, atau ganti ukuran gambar."}
+              {info.cetak
+                ? <>Saat dicetak: tulisan butir ≈ <b>{pt(info.pxNama)} pt</b>{info.pxKet != null && <> · keterangan ≈ <b>{pt(info.pxKet)} pt</b></>}.{" "}</>
+                : <>Tulisan butir ≈ <b>{Math.round(info.pxNama)} px</b>{info.pxKet != null && <> · keterangan ≈ <b>{Math.round(info.pxKet)} px</b></>}.{" "}</>}
+              {nyaman ? (info.cetak ? "Nyaman dibaca di kertas." : "Nyaman dibaca di HP.") : agak ? "Agak kecil: coba ukuran Besar, kurangi butir, atau ganti ukuran gambar." : "Terlalu kecil: kurangi butir, pilih ukuran Besar/Sangat besar, atau ganti ukuran gambar."}
             </p>
           );
         })()}
