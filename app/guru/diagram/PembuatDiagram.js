@@ -145,7 +145,6 @@ export default function PembuatDiagram() {
           ))}
         </div>
         <p className="text-xs leading-relaxed text-tinta/60"><b>Otomatis</b> memperbesar tulisan sampai gambar penuh. <b>Kecil sampai Sangat besar</b> memakai ukuran tetap: tulisan tidak diperbesar otomatis, dan hanya dikecilkan bila isinya tidak muat (kolom Pratinjau memberi tahu bila itu terjadi). Geser di bawah untuk menyesuaikan tiap bagian.</p>
-        </div>
         <div className="grid gap-4 sm:grid-cols-2">
         <div><label className="label" htmlFor="uk-n">Nama butir: {ukNama}%</label>
           <input id="uk-n" type="range" min="60" max="220" step="5" value={ukNama} onChange={(e) => setUkNama(Number(e.target.value))} className="w-full accent-[#1E7B34]" /></div>
