@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase/server";
+import { ambilSesi } from "@/lib/auth";
 import AktifkanNotifikasi from "@/components/AktifkanNotifikasi";
 
 export default async function Dashboard() {
-  const supabase = supabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: p } = await supabase.from("profiles").select("nama_lengkap,kode,role").eq("id", user.id).maybeSingle();
+  const { supabase, user, profil: p } = await ambilSesi();
   const peran = { peserta: "Peserta", pengajar: "Pengajar", admin: "Admin" }[p?.role] || "Peserta";
 
   const { data: pg } = await supabase.from("peserta_grup")
@@ -14,15 +12,18 @@ export default async function Dashboard() {
   let tautan = null, teman = [], persen = 0, total = 0, selesai = 0, absenBuka = 0;
   if (grup) {
     const hitung = (t) => supabase.from(t).select("id", { count: "exact", head: true }).eq("grup_id", grup.id);
-    const [m, r, k, s] = await Promise.all([
+    const [m, r, k, s, ab, tt, tm] = await Promise.all([
       hitung("materi"), hitung("rekaman"), hitung("kuis").eq("diterbitkan", true),
       supabase.from("progres").select("item_id", { count: "exact", head: true }).eq("profile_id", user.id).in("jenis", ["materi", "rekaman", "kuis"]),
+      supabase.from("pertemuan").select("id", { count: "exact", head: true }).eq("grup_id", grup.id).eq("absensi_buka", true),
+      supabase.from("grup_tautan").select("link").eq("grup_id", grup.id).maybeSingle(),
+      supabase.rpc("teman_grup"),
     ]);
-    absenBuka = (await supabase.from("pertemuan").select("id", { count: "exact", head: true }).eq("grup_id", grup.id).eq("absensi_buka", true)).count || 0;
+    absenBuka = ab.count || 0;
     total = (m.count || 0) + (r.count || 0) + (k.count || 0); selesai = Math.min(s.count || 0, total);
     persen = total ? Math.round((selesai / total) * 100) : 0;
-    tautan = (await supabase.from("grup_tautan").select("link").eq("grup_id", grup.id).maybeSingle()).data?.link;
-    teman = (await supabase.rpc("teman_grup")).data || [];
+    tautan = tt.data?.link;
+    teman = tm.data || [];
   }
 
   return (

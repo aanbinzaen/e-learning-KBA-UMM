@@ -17,7 +17,10 @@ export async function middleware(request) {
       },
     }
   );
-  const { data: { user } } = await supabase.auth.getUser();
+  // getSession membaca token dari cookie (tanpa panggilan jaringan) dan tetap menyegarkan token kedaluwarsa.
+  // Keabsahan sesi diperiksa penuh oleh halaman (ambilSesi memakai getUser).
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   const path = request.nextUrl.pathname;
   const butuhLogin = path.startsWith("/dashboard") || path.startsWith("/ganti-password");
   if (butuhLogin && !user) {

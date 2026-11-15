@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase/server";
+import { ambilSesi } from "@/lib/auth";
 import { keluar } from "@/app/masuk/actions";
 
 export const metadata = { title: "Dashboard", robots: { index: false } };
 
 export default async function DashboardLayout({ children }) {
-  const supabase = supabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/masuk");
-  const { data: profil } = await supabase.from("profiles").select("nama_lengkap,kode,role,aktif,wajib_ganti_password").eq("id", user.id).maybeSingle();
+  const s = await ambilSesi();
+  if (!s) redirect("/masuk");
+  const { supabase, profil } = s;
   if (!profil || !profil.aktif) { await supabase.auth.signOut(); redirect("/masuk"); }
   if (profil.wajib_ganti_password) redirect("/ganti-password");
   const nav = [
