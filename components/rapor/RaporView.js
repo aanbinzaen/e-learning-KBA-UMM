@@ -42,7 +42,7 @@ export default function RaporView({ r }) {
           <div><p className="text-xl font-bold" style={{ color: pr.warna }}>{pr.nama}</p>{pr.ar && <p lang="ar" dir="rtl" className="arab text-2xl leading-none" style={{ color: pr.warna }}>{pr.ar}</p>}{!pr.ar && pr.arti && <p className="text-sm text-tinta/60">{pr.arti}</p>}</div>
         </div>
         <div className="space-y-5">
-          <Metrik judul="Kehadiran" nilai={pct(kh.persen)} warna={WARNA_HADIR.hadir} bar={kh.persen} sub={kh.total ? `${kh.hadir} dari ${kh.total} pertemuan` : "Belum ada pertemuan"} />
+          <Metrik judul="Kehadiran" nilai={pct(kh.persen)} warna={WARNA_HADIR.hadir} bar={kh.persen} sub={kh.total ? `hadir ${kh.hadir} · sakit ${kh.sakit} · izin ${kh.izin} · alpa ${kh.alpa}` : "Belum ada pertemuan"} />
           <Metrik judul="Rata-rata kuis" nilai={q.rata == null ? "-" : q.rata} warna={warnaNilai(q.rata)} bar={q.rata} sub={q.jumlah ? `${q.dikerjakan} dari ${q.jumlah} kuis dikerjakan` : "Belum ada kuis"} />
           <Metrik judul="Progres belajar" nilai={pct(g.persen)} warna="#6B9E2F" bar={g.persen} sub={g.total ? `${g.selesai} dari ${g.total} materi, rekaman, dan kuis` : "Belum ada materi"} />
         </div>
@@ -51,7 +51,7 @@ export default function RaporView({ r }) {
       <Bagian judul="Kehadiran">
         {!kh.total ? <p className="text-tinta/60">Belum ada pertemuan yang terlaksana pada periode ini.</p> : (
           <div className="flex flex-col items-center gap-6 sm:flex-row">
-            <Donut bagian={["hadir", "izin", "sakit", "alpa"].map((s) => ({ nilai: kh[s], warna: WARNA_HADIR[s] }))} tengah={pct(kh.persen)} sub="hadir" />
+            <Donut bagian={["hadir", "izin", "sakit", "alpa"].map((s) => ({ nilai: kh[s], warna: WARNA_HADIR[s] }))} tengah={pct(kh.persen)} sub="nilai hadir" />
             <ul className="w-full space-y-2">
               {["hadir", "izin", "sakit", "alpa"].map((s) => (
                 <li key={s} className="flex items-center gap-3"><span aria-hidden className="h-5 w-5 shrink-0 rounded-md" style={{ background: WARNA_HADIR[s] }} />
@@ -104,7 +104,7 @@ export default function RaporView({ r }) {
           <blockquote className="rounded-2xl border-l-4 border-kuning bg-krem p-4 leading-relaxed" dir="auto"><p className="whitespace-pre-line">{r.catatan.isi}</p>{r.catatan.oleh && <footer className="mt-2 text-sm font-semibold text-hijau">— {r.catatan.oleh}</footer>}</blockquote>
         </Bagian>
       )}
-      <p className="text-xs leading-relaxed text-tinta/55">Skor akhir = kehadiran {r.bobot.hadir}% + nilai kuis {r.bobot.kuis}% + progres belajar {r.bobot.progres}%. Kuis yang belum dikerjakan dihitung 0; kuis esai yang belum dinilai belum dihitung. Predikat: Mumtaz (90 ke atas), Jayyid Jiddan (80–89), Jayyid (70–79), Maqbul (60–69), di bawah 60 Perlu Bimbingan.</p>
+      <p className="text-xs leading-relaxed text-tinta/55">Skor akhir = kehadiran {r.bobot.hadir}% + nilai kuis {r.bobot.kuis}% + progres belajar {r.bobot.progres}%. Nilai kehadiran per pertemuan: hadir dan sakit 100, izin 95, alpa 0. Kuis yang belum dikerjakan dihitung 0; kuis esai yang belum dinilai belum dihitung. Predikat: Mumtaz (90 ke atas), Jayyid Jiddan (80–89), Jayyid (70–79), Maqbul (60–69), di bawah 60 Perlu Bimbingan.</p>
     </div>
   );
 }

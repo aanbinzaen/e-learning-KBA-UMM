@@ -32,7 +32,7 @@ export default async function RekapGuru({ searchParams }) {
       </div>
       <TabelRekap judul={`${aktif.kelas?.jenis_kelamin} · ${aktif.kelas?.tingkat} · ${aktif.nama}`} rekap={hasil} />
       <TabelNilai nilai={nilai} />
-      <p className="text-xs text-tinta/60">Kehadiran = Hadir ÷ pertemuan yang sudah berlangsung. Nilai kuis = nilai terbaik tiap kuis yang diterbitkan.</p>
+      <p className="text-xs text-tinta/60">Nilai kehadiran = rata-rata per pertemuan yang sudah berlangsung (Hadir 100, Sakit 100, Izin 95, Alpa 0). Nilai kuis = nilai terbaik tiap kuis yang diterbitkan.</p>
     </div>
   );
 }

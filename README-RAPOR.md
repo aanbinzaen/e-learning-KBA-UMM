@@ -15,7 +15,7 @@ Skor akhir, predikat, kehadiran (hadir/izin/sakit/alpa), nilai tiap kuis, progre
 riwayat kehadiran per pertemuan, dan catatan pengajar. Dapat disaring per periode (tanggal).
 
 ## Cara menghitung
-- Kehadiran = Hadir ÷ pertemuan yang sudah berlangsung. Tanpa catatan absensi = Alpa.
+- Nilai kehadiran = rata-rata nilai per pertemuan yang sudah berlangsung: Hadir 100, Sakit 100 (sama dengan hadir), Izin 95, Alpa 0. Ubah di `NILAI_HADIR` pada lib/rapor.js. Tanpa catatan absensi = Alpa.
 - Nilai kuis = rata-rata nilai terbaik tiap kuis yang diterbitkan. Kuis belum dikerjakan = 0. Esai yang belum dinilai belum dihitung.
 - Progres = materi + rekaman + kuis yang sudah ditandai selesai ÷ seluruhnya (tidak mengikuti filter periode).
 - Skor akhir = bobot kehadiran / kuis / progres (bawaan 40/40/20, ubah di halaman Laporan oleh admin).
