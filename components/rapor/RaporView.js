@@ -1,5 +1,5 @@
 import { Cincin, Donut, BatangH } from "./Grafik";
-import { STATUS_HADIR, WARNA_HADIR, warnaNilai } from "@/lib/rapor";
+import { STATUS_HADIR, WARNA_HADIR, warnaNilai, pesanRapor } from "@/lib/rapor";
 
 const pct = (v) => (v == null ? "-" : `${v}%`);
 const tglS = (iso) => new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Jakarta" });
@@ -24,7 +24,7 @@ function Metrik({ judul, nilai, warna, sub, bar }) {
 }
 
 export default function RaporView({ r }) {
-  const kh = r.kehadiran, q = r.kuis, g = r.progres, pr = r.predikat;
+  const kh = r.kehadiran, q = r.kuis, g = r.progres, pr = r.predikat, pesan = pesanRapor(r.skor);
   return (
     <div className="space-y-5">
       <header className="overflow-hidden rounded-kartu bg-gradient-to-br from-hijau to-hijau-tua p-6 text-white sm:p-8">
@@ -104,6 +104,13 @@ export default function RaporView({ r }) {
           <blockquote className="rounded-2xl border-l-4 border-kuning bg-krem p-4 leading-relaxed" dir="auto"><p className="whitespace-pre-line">{r.catatan.isi}</p>{r.catatan.oleh && <footer className="mt-2 text-sm font-semibold text-hijau">— {r.catatan.oleh}</footer>}</blockquote>
         </Bagian>
       )}
+      <section aria-label="Apresiasi dan nasihat" className="rounded-kartu border-2 border-kuning/60 bg-[#FFFDF5] p-5">
+        <h2 className="text-lg font-bold text-hijau-tua">Apresiasi dan Nasihat</h2>
+        <p className="mt-2 leading-relaxed">{pesan.apresiasi}</p>
+        <p className="arab my-3 text-center text-2xl leading-loose text-hijau-tua" lang="ar" dir="rtl">{pesan.ayat.arab}</p>
+        <p className="text-center text-sm italic text-tinta/70">“{pesan.ayat.arti}” ({pesan.ayat.sumber})</p>
+        <p className="mt-3 leading-relaxed">{pesan.nasihat}</p>
+      </section>
       <p className="text-xs leading-relaxed text-tinta/55">Skor akhir = kehadiran {r.bobot.hadir}% + nilai kuis {r.bobot.kuis}% + progres belajar {r.bobot.progres}%. Nilai kehadiran per pertemuan: hadir dan sakit 100, izin 95, alpa 0. Kuis yang belum dikerjakan dihitung 0; kuis esai yang belum dinilai belum dihitung. Predikat: Mumtaz (90 ke atas), Jayyid Jiddan (80–89), Jayyid (70–79), Maqbul (60–69), di bawah 60 Perlu Bimbingan.</p>
     </div>
   );
