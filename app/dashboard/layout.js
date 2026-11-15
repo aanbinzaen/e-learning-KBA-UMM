@@ -14,13 +14,13 @@ export default async function DashboardLayout({ children }) {
   if (profil.wajib_ganti_password) redirect("/ganti-password");
   const nav = [
     ["/dashboard", "Dashboard"],
-    ...(profil.role === "peserta" ? [["/dashboard/kelas", "Kelas"], ["/dashboard/absensi", "Absensi"]] : [["/guru", "Kelola Kelas"], ["/dashboard/kelas", "Lihat Kelas"]]),
+    ...(profil.role === "peserta" ? [["/dashboard/kelas", "Kelas"], ["/dashboard/absensi", "Absensi"], ["/dashboard/rapor", "Rapor"]] : [["/guru", "Kelola Kelas"], ["/dashboard/kelas", "Lihat Kelas"]]),
     ["/dashboard/profil", "Profil Saya"],
     ...(profil.role === "admin" ? [["/admin", "Admin"]] : []),
   ];
   return (
     <div className="bagian">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
         <nav className="flex flex-wrap gap-2" aria-label="Menu akun">
           {nav.map(([h, l]) => <Link key={h} href={h} className="rounded-2xl border-2 border-hijau/20 bg-white px-4 py-2.5 text-sm font-medium text-hijau hover:bg-hijau-muda">{l}</Link>)}
         </nav>

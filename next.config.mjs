@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // web-push memakai modul bawaan Node; dibiarkan sebagai paket eksternal di sisi server
-  experimental: { serverComponentsExternalPackages: ["web-push"] },
+  // paket berikut dipakai di sisi server (notifikasi, Word, Excel) dan dimuat apa adanya oleh Node
+  experimental: { serverComponentsExternalPackages: ["web-push", "docx", "jszip"] },
 };
 export default nextConfig;
