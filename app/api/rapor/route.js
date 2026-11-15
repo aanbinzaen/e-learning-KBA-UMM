@@ -11,12 +11,12 @@ const UUID = /^[0-9a-f-]{36}$/i;
 const slug = (t) => String(t || "rapor").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "rapor";
 const TIPE = { docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
 
-// GET /api/rapor?peserta=<id>|grup=<id>&format=docx|xlsx&dari=&sampai=
+// GET /api/rapor?peserta=<id>|grup=<id>&format=docx|xlsx|json&dari=&sampai=
 export async function GET(request) {
   const s = await ambilSesi();
   if (!s?.profil?.aktif) return new Response("Silakan masuk dulu.", { status: 401 });
   const sp = Object.fromEntries(new URL(request.url).searchParams);
-  const format = sp.format === "xlsx" ? "xlsx" : "docx";
+  const format = sp.format === "xlsx" ? "xlsx" : sp.format === "json" ? "json" : "docx";
   const rentang = bacaRentang(sp), bobot = await ambilBobot(s.supabase), staf = ["pengajar", "admin"].includes(s.profil.role);
   let daftar = [], nama = "rapor";
 
@@ -33,6 +33,7 @@ export async function GET(request) {
   }
   if (!daftar.length) return new Response("Data rapor tidak ditemukan.", { status: 404 });
 
+  if (format === "json") return Response.json({ nama, daftar }, { headers: { "Cache-Control": "no-store" } });
   const buf = format === "xlsx" ? await buatExcelRapor(daftar) : await buatDokRapor(daftar);
   return new Response(buf, { headers: { "Content-Type": TIPE[format], "Content-Disposition": `attachment; filename="${nama}.${format}"`, "Cache-Control": "no-store" } });
 }

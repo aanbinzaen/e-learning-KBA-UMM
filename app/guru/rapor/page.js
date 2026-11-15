@@ -1,3 +1,4 @@
+import UnduhGrupPdf from "@/components/rapor/UnduhGrupPdf";
 import Link from "next/link";
 import { wajibGuru } from "@/lib/guru";
 import { ambilBobot, bacaRentang, grupRingkas, muatRaporGrup } from "@/lib/raporData";
@@ -34,7 +35,8 @@ export default async function RaporGuru({ searchParams }) {
           <section className="kartu space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-bold text-hijau-tua">{aktif.nama} <span className="text-sm font-medium text-tinta/60">· {aktif.kelas?.jenis_kelamin} · {aktif.kelas?.tingkat} · {ring.n} peserta</span></h2>
-              <div className="no-print flex flex-wrap gap-2">
+              <div className="no-print flex flex-wrap items-center gap-2">
+                <UnduhGrupPdf grupId={aktif.id} tambah={tambah} namaGrup={aktif.nama} />
                 <a href={`/api/rapor?grup=${aktif.id}&format=docx${tambah}`} className="btn !min-h-[44px] !px-4 border-2 border-hijau text-sm text-hijau hover:bg-hijau-muda">Word: semua rapor</a>
                 <a href={`/api/rapor?grup=${aktif.id}&format=xlsx${tambah}`} className="btn !min-h-[44px] !px-4 border-2 border-hijau text-sm text-hijau hover:bg-hijau-muda">Excel: rekap grup</a>
               </div>

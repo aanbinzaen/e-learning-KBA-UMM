@@ -23,6 +23,6 @@ riwayat kehadiran per pertemuan, dan catatan pengajar. Dapat disaring per period
 - Predikat: Mumtaz ≥ 90 · Jayyid Jiddan 80–89 · Jayyid 70–79 · Maqbul 60–69 · di bawah 60 Perlu Bimbingan.
 
 ## Unduhan
-- **Gambar PNG/JPG** (rapor dan laporan; opsi HD 2×), **Word**, **Excel**, serta **Cetak/PDF**.
+- **Gambar PNG/JPG** (rapor dan laporan; opsi HD 2×), **Word**, **Excel**, serta **PDF A4**. PDF dan gambar PNG/JPG dibuat per halaman A4: isi yang tidak muat mengalir ke halaman berikutnya (kepala lanjutan + nomor halaman). Gambar lebih dari satu halaman diunduh sebagai zip. Guru juga dapat mengunduh satu PDF berisi rapor semua peserta grup.
 - Rapor satu grup sekaligus: Word (satu halaman per peserta) dan Excel (rekap, matriks kehadiran, matriks nilai kuis).
 - Laporan umum: opsi menyembunyikan nama peserta (untuk laporan anonim).
