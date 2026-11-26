@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { W, H, siapkanReels, gambarReels, pilihFormatRekam } from "@/lib/reels";
+import { W, H, siapkanReels, gambarReels, gambarPenutup, bunyiWhoosh, DURASI_PENUTUP, pilihFormatRekam } from "@/lib/reels";
 import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
 import BingkaiYouTube from "./BingkaiYouTube";
 import { jadikanProgresif } from "@/lib/mp4Lurus";
@@ -36,6 +36,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
   const [durasiKartu, setDurasiKartu] = useState(10);
   const [hd, setHd] = useState(false);
   const [musik, setMusik] = useState(null);
+  const [efek, setEfek] = useState(true);
   const [volMusik, setVolMusik] = useState(12);
   const [berkas, setBerkas] = useState(null);
   const [durVideo, setDurVideo] = useState(0);
@@ -114,9 +115,10 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
     try {
       const alur = k.captureStream(30);
       const v = mode === "video" ? videoRef.current : null;
-      if (v || musik) {
+      let tujuan = null;
+      {
         ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
-        const tujuan = ac.createMediaStreamDestination();
+        tujuan = ac.createMediaStreamDestination();
         if (v) ac.createMediaElementSource(v).connect(tujuan);
         if (musik) {
           lagu = new Audio(); lagu.src = URL.createObjectURL(musik); lagu.loop = true; lagu.preload = "auto";
@@ -133,21 +135,40 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       const st = { judul, pemateri, kelas, isi, video: v, label: mode === "video" ? labelPotongan(ke, dariDetik(awal), dariDetik(akhir)) : "" };
       rec.start(500);
       const t0 = performance.now();
+      if (efek) bunyiWhoosh(ac, tujuan, { naik: true, volume: 0.45 });
       if (v) await v.play();
       if (lagu) await lagu.play();
       await new Promise((ok) => {
+        let macet = false;
         const loop = () => {
-          const t = v ? v.currentTime - awal : (performance.now() - t0) / 1000;
+          const wall = (performance.now() - t0) / 1000;
+          const t = v ? v.currentTime - awal : wall;
+          // video tersendat (memuat/decode): jeda perekam agar waktu macet tidak ikut terekam & durasi tetap sesuai
+          if (v) {
+            const tersendat = v.readyState < 3 && !v.ended;
+            if (tersendat && !macet && rec.state === "recording") { rec.pause(); macet = true; if (lagu) lagu.pause(); }
+            else if (!tersendat && macet && rec.state === "paused") { rec.resume(); macet = false; if (lagu) lagu.play().catch(() => {}); }
+          }
           gambarReels(ctx, st, aset, Math.max(0, t), dur);
           // backsound lirih: masuk perlahan, keluar perlahan di akhir
           if (gainLagu) gainLagu.gain.value = (volMusik / 100) * Math.max(0, Math.min(1, t / 1.2, (dur - t) / 1.5));
-          if (t >= dur || (v && v.ended)) return ok();
+          if (t >= dur - 0.02 || (v && v.ended) || wall > dur * 2 + 30) return ok();
           setStatus(`Merekam… ${Math.min(100, Math.round((t / dur) * 100))}%`);
           requestAnimationFrame(loop);
         };
         loop();
       });
       if (v) v.pause();
+      // penutup: logo Rumah Dakwah dan Pesantren Online, dengan efek whoosh di awalnya
+      if (efek) {
+        if (gainLagu) gainLagu.gain.value = 0;
+        bunyiWhoosh(ac, tujuan, { naik: false, volume: 0.45, durasi: 0.9 });
+        await new Promise((ok) => {
+          const tp = performance.now();
+          const loopP = () => { const x = (performance.now() - tp) / 1000; gambarPenutup(ctx, aset, x); if (x >= DURASI_PENUTUP) return ok(); setStatus("Menambah penutup…"); requestAnimationFrame(loopP); };
+          loopP();
+        });
+      }
       if (lagu) lagu.pause();
       await new Promise((r) => setTimeout(r, 300));
       rec.stop(); await selesaiRekam;
@@ -248,6 +269,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
           ) : <p className="text-sm text-tinta/70">Pilih berkas MP3/M4A dari HP. Kosongkan bila tidak ingin musik.</p>}
         </div>
 
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={efek} onChange={(e) => setEfek(e.target.checked)} /> Efek suara whoosh di awal dan akhir + penutup logo Rumah Dakwah &amp; Pesantren Online</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={hd} onChange={(e) => setHd(e.target.checked)} /> Kualitas HD 1080×1920 (lebih berat; bawaan 720×1280 sudah cukup untuk Reels/Status)</label>
 
         <div className="flex flex-wrap gap-2">
