@@ -6,6 +6,7 @@ import FormAksi from "@/components/FormAksi";
 import TombolHapus from "@/components/TombolHapus";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import FormPdf from "./FormPdf";
+import FormGambar from "./FormGambar";
 import { kirimPengingat, buatKuis, ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
 
 export default async function DetailPertemuan({ params }) {
@@ -46,12 +47,14 @@ export default async function DetailPertemuan({ params }) {
       <Kotak judul={`Materi (${materi?.length || 0})`}>
         {(materi || []).map((m) => (
           <div key={m.id} className="flex items-center justify-between gap-2 rounded-2xl bg-hijau-muda px-4 py-2">
-            <span className="min-w-0 truncate"><span className="mr-2 rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-hijau">{m.jenis === "pdf" ? "PDF" : "Catatan"}</span>{m.judul}</span>
+            <span className="min-w-0 truncate"><span className="mr-2 rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-hijau">{m.jenis === "pdf" ? "PDF" : m.jenis === "gambar" ? "Gambar" : "Catatan"}</span>{m.judul}</span>
             <TombolHapus aksi={hapusMateri.bind(null, m.id, p.id)} pesan="Hapus materi ini?" />
           </div>
         ))}
         <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-medium text-hijau">+ Unggah PDF</summary>
           <div className="mt-3"><FormPdf pertemuanId={p.id} grupId={p.grup_id} /></div></details>
+        <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-medium text-hijau">+ Unggah gambar (PNG/JPG)</summary>
+          <div className="mt-3"><FormGambar pertemuanId={p.id} grupId={p.grup_id} /></div></details>
         <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-medium text-hijau">+ Tulis catatan</summary>
           <FormAksi aksi={tambahCatatan.bind(null, p.id, p.grup_id)} kirim="Simpan catatan" reset className="mt-3 space-y-4">
             <div><label className="label" htmlFor="jc">Judul</label><input id="jc" name="judul" className="input" required /></div>

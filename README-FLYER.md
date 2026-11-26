@@ -9,3 +9,8 @@ Menu **Pengumuman** (pengajar) dan **Pengumuman & Flyer** (admin), alamat `/guru
 - Admin memilih salah satu dari enam grup resmi. Pengajar langsung ke grupnya sendiri (tautan dari menu Kelas & Grup, atau dicocokkan lewat nama grup).
 - Daftar grup resmi dan tautannya ada di `GRUP_WA` pada `lib/flyer.js`.
 - Tidak ada SQL baru.
+
+## Materi berupa gambar (PNG/JPG)
+Jalankan sekali di Supabase SQL Editor: `supabase/14_materi_gambar.sql`
+(jika error pada baris `alter type`, jalankan baris itu sendiri dulu, lalu sisanya).
+Setelah itu di halaman pertemuan pengajar/admin muncul "+ Unggah gambar (PNG/JPG)".

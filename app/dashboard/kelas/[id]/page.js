@@ -13,7 +13,7 @@ export default async function DetailKelas({ params }) {
   const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan").eq("id", params.id).maybeSingle();
   if (!p) notFound();
   const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }, { data: kuis }, { data: perc }] = await Promise.all([
-    supabase.from("materi").select("id,jenis,judul,catatan").eq("pertemuan_id", p.id).order("dibuat_pada"),
+    supabase.from("materi").select("id,jenis,judul,catatan,file_path").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("rekaman").select("id,judul,youtube_id").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("progres").select("item_id").eq("profile_id", user.id),
     supabase.from("grup_tautan").select("link").eq("grup_id", p.grup_id).maybeSingle(),
@@ -26,6 +26,13 @@ export default async function DetailKelas({ params }) {
     else terbaik[x.kuis_id] = Math.max(terbaik[x.kuis_id] ?? -1, x.nilai);
   });
   const sudah = new Set((selesai || []).map((x) => x.item_id));
+  // tautan sementara (1 jam) agar gambar materi tampil langsung di halaman
+  const gambarUrl = {};
+  const daftarGambar = (materi || []).filter((m) => m.jenis === "gambar" && m.file_path);
+  if (daftarGambar.length) {
+    const { data: ttd } = await supabase.storage.from("materi").createSignedUrls(daftarGambar.map((m) => m.file_path), 3600);
+    (ttd || []).forEach((t, i) => { if (t?.signedUrl) gambarUrl[daftarGambar[i].id] = t.signedUrl; });
+  }
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -44,6 +51,13 @@ export default async function DetailKelas({ params }) {
           <article key={m.id} className="kartu space-y-3">
             <h3 className="font-semibold">{m.judul}</h3>
             {m.jenis === "catatan" && <p className="whitespace-pre-line leading-relaxed" dir="auto">{m.catatan}</p>}
+            {m.jenis === "gambar" && gambarUrl[m.id] && (
+              <a href={`/dashboard/materi/${m.id}`} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-2xl border border-hijau/15 bg-krem" aria-label={`Buka gambar ${m.judul} ukuran penuh`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={gambarUrl[m.id]} alt={m.judul} loading="lazy" className="mx-auto max-h-[70vh] w-auto max-w-full" />
+              </a>
+            )}
+            {m.jenis === "gambar" && <a href={`/dashboard/materi/${m.id}`} target="_blank" rel="noopener noreferrer" className="btn-hijau w-full">Buka gambar ukuran penuh</a>}
             {m.jenis === "pdf" && <a href={`/dashboard/materi/${m.id}`} target="_blank" rel="noopener noreferrer" className="btn-hijau w-full">Buka PDF</a>}
             <TombolSelesai jenis="materi" itemId={m.id} awal={sudah.has(m.id)} />
           </article>
