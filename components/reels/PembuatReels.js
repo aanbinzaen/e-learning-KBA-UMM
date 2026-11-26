@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { W, H, siapkanReels, gambarReels, pilihFormatRekam } from "@/lib/reels";
-import { keDetik, dariDetik } from "@/lib/youtube";
+import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
 
 const tombolGaris = "btn !min-h-[46px] !px-4 border-2 border-hijau/30 text-sm text-hijau hover:bg-hijau-muda disabled:opacity-60";
 
-export default function PembuatReels({ pengajar = "" }) {
+export default function PembuatReels({ pengajar = "", rekaman = [] }) {
+  const [tautan, setTautan] = useState("");
   const [mode, setMode] = useState("video");
   const [judul, setJudul] = useState("Faidah Kajian Pekan Ini");
   const [sub, setSub] = useState(pengajar ? `Ustadz ${pengajar.replace(/^Ustadz\s+/i, "")}` : "");
@@ -14,6 +15,8 @@ export default function PembuatReels({ pengajar = "" }) {
   const [selesai, setSelesai] = useState("");
   const [durasiKartu, setDurasiKartu] = useState(10);
   const [hd, setHd] = useState(false);
+  const [musik, setMusik] = useState(null);
+  const [volMusik, setVolMusik] = useState(12);
   const [berkas, setBerkas] = useState(null);
   const [durVideo, setDurVideo] = useState(0);
   const [galat, setGalat] = useState("");
@@ -23,7 +26,8 @@ export default function PembuatReels({ pengajar = "" }) {
   const kanvasRef = useRef(null), asetRef = useRef(null), videoRef = useRef(null), stateRef = useRef({});
   const format = typeof window !== "undefined" ? pilihFormatRekam() : null;
 
-  const mulaiDt = keDetik(mulai), selesaiDt = keDetik(selesai);
+  const mulaiDt = keDetik(mulai), selesaiDt = keDetik(selesai), idYt = idYouTube(tautan);
+  const judulDiubah = useRef(false);
   stateRef.current = { mode, judul, sub, isi, video: mode === "video" ? videoRef.current : null, sibuk };
 
   // pratinjau
@@ -78,16 +82,23 @@ export default function PembuatReels({ pengajar = "" }) {
     const k = document.createElement("canvas"); k.width = hd ? 1080 : 720; k.height = hd ? 1920 : 1280;
     const ctx = k.getContext("2d");
     const dur = akhir - awal, aset = asetRef.current || await siapkanReels();
-    let ac = null;
+    let ac = null, lagu = null, gainLagu = null;
     try {
       const alur = k.captureStream(30);
       const v = mode === "video" ? videoRef.current : null;
-      if (v) {
+      if (v || musik) {
         ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
-        const sumber = ac.createMediaElementSource(v), tujuan = ac.createMediaStreamDestination();
-        sumber.connect(tujuan); tujuan.stream.getAudioTracks().forEach((a) => alur.addTrack(a));
-        v.currentTime = awal; await new Promise((ok) => { const f = () => { v.removeEventListener("seeked", f); ok(); }; v.addEventListener("seeked", f); });
+        const tujuan = ac.createMediaStreamDestination();
+        if (v) ac.createMediaElementSource(v).connect(tujuan);
+        if (musik) {
+          lagu = new Audio(); lagu.src = URL.createObjectURL(musik); lagu.loop = true; lagu.preload = "auto";
+          await new Promise((ok, gagal) => { lagu.oncanplaythrough = ok; lagu.onerror = () => gagal(new Error("berkas musik tidak bisa dibaca")); lagu.load(); });
+          gainLagu = ac.createGain(); gainLagu.gain.value = 0;
+          ac.createMediaElementSource(lagu).connect(gainLagu); gainLagu.connect(tujuan);
+        }
+        tujuan.stream.getAudioTracks().forEach((a) => alur.addTrack(a));
       }
+      if (v) { v.currentTime = awal; await new Promise((ok) => { const f = () => { v.removeEventListener("seeked", f); ok(); }; v.addEventListener("seeked", f); }); }
       const rec = new MediaRecorder(alur, { mimeType: format.mime, videoBitsPerSecond: hd ? 6_000_000 : 3_500_000 });
       const potong = []; rec.ondataavailable = (e) => e.data.size && potong.push(e.data);
       const selesaiRekam = new Promise((ok) => { rec.onstop = ok; });
@@ -95,10 +106,13 @@ export default function PembuatReels({ pengajar = "" }) {
       rec.start(500);
       const t0 = performance.now();
       if (v) await v.play();
+      if (lagu) await lagu.play();
       await new Promise((ok) => {
         const loop = () => {
           const t = v ? v.currentTime - awal : (performance.now() - t0) / 1000;
           gambarReels(ctx, st, aset, Math.max(0, t), dur);
+          // backsound lirih: masuk perlahan, keluar perlahan di akhir
+          if (gainLagu) gainLagu.gain.value = (volMusik / 100) * Math.max(0, Math.min(1, t / 1.2, (dur - t) / 1.5));
           if (t >= dur || (v && v.ended)) return ok();
           setStatus(`Merekam… ${Math.min(100, Math.round((t / dur) * 100))}%`);
           requestAnimationFrame(loop);
@@ -106,6 +120,7 @@ export default function PembuatReels({ pengajar = "" }) {
         loop();
       });
       if (v) v.pause();
+      if (lagu) lagu.pause();
       await new Promise((r) => setTimeout(r, 300));
       rec.stop(); await selesaiRekam;
       const blob = new Blob(potong, { type: format.mime.split(";")[0] });
@@ -114,7 +129,7 @@ export default function PembuatReels({ pengajar = "" }) {
     } catch (e) {
       setGalat("Perekaman gagal: " + (e?.message || "coba lagi dengan Chrome terbaru."));
       setStatus("");
-    } finally { setSibuk(false); if (ac) ac.close().catch(() => {}); }
+    } finally { setSibuk(false); if (lagu) { lagu.pause(); URL.revokeObjectURL(lagu.src); } if (ac) ac.close().catch(() => {}); }
   }
 
   const nama = `reels-kba-umm-${judul.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "klip"}.${hasil?.ext || "mp4"}`;
@@ -133,13 +148,36 @@ export default function PembuatReels({ pengajar = "" }) {
           ))}
         </div>
 
-        <div><label className="label" htmlFor="rj">Judul reels</label><input id="rj" className="input" value={judul} onChange={(e) => setJudul(e.target.value)} maxLength={120} /></div>
+        <div><label className="label" htmlFor="rj">Judul reels</label><input id="rj" className="input" value={judul} onChange={(e) => { judulDiubah.current = true; setJudul(e.target.value); }} maxLength={120} /></div>
         <div><label className="label" htmlFor="rs">Keterangan di bawah judul (kelas / pengajar)</label><input id="rs" className="input" value={sub} onChange={(e) => setSub(e.target.value)} maxLength={70} placeholder="Kelas Imam Ibnu Hisyam · Ustadz Aan" /></div>
 
         {mode === "video" ? (
           <>
+            <div className="space-y-3 rounded-2xl border-2 border-hijau/15 p-4">
+              <p className="font-medium text-hijau-tua">Langkah 1 · Cari menit di rekaman YouTube</p>
+              {rekaman.length > 0 && (
+                <div><label className="label" htmlFor="rr">Pilih dari rekaman kelas</label>
+                  <select id="rr" className="input" value="" onChange={(e) => { if (e.target.value) { setTautan(`https://youtu.be/${e.target.value}`); const r = rekaman.find((x) => x.youtube_id === e.target.value); if (r && !judulDiubah.current) setJudul(r.judul); } }}>
+                    <option value="">— pilih rekaman —</option>
+                    {rekaman.map((r) => <option key={r.id} value={r.youtube_id}>{r.pertemuan ? `${r.pertemuan} · ` : ""}{r.judul}</option>)}
+                  </select>
+                </div>
+              )}
+              <div><label className="label" htmlFor="rt">atau tempel tautan YouTube</label><input id="rt" className="input" value={tautan} onChange={(e) => setTautan(e.target.value)} placeholder="https://youtu.be/…" /></div>
+              {idYt && (
+                <>
+                  <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
+                    <iframe key={`${idYt}-${mulaiDt ?? 0}`} src={`https://www.youtube-nocookie.com/embed/${idYt}?rel=0${Number.isFinite(mulaiDt) && mulaiDt != null ? `&start=${mulaiDt}` : ""}`} title="Pratinjau rekaman" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen className="absolute inset-0 h-full w-full" />
+                  </div>
+                  <p className="text-sm text-tinta/70">Putar dan catat menit mulai dan selesai bagian yang diinginkan, lalu isi kolom Mulai dan Selesai di bawah.</p>
+                  <a href={`https://studio.youtube.com/video/${idYt}/edit`} target="_blank" rel="noopener noreferrer" className={tombolGaris}>Buka di YouTube Studio untuk mengunduh video</a>
+                  <p className="text-sm text-tinta/70">Di YouTube Studio: ikon titik tiga (Opsi) → <b>Unduh</b>. Hanya pemilik channel yang bisa mengunduh videonya. Setelah terunduh, lanjut ke langkah 2.</p>
+                </>
+              )}
+              {tautan.trim() && !idYt && <p className="text-sm font-medium text-red-700">Tautan YouTube tidak dikenali.</p>}
+            </div>
             <div>
-              <label className="label" htmlFor="rv">Video kajian (dari galeri / hasil unduhan rekaman)</label>
+              <label className="label" htmlFor="rv">Langkah 2 · Pilih video yang sudah diunduh (atau dari galeri)</label>
               <input id="rv" type="file" accept="video/*" className="input" onChange={(e) => pilihBerkas(e.target.files?.[0])} />
               {durVideo > 0 && <p className="mt-1 text-sm text-tinta/70">Durasi video: {dariDetik(durVideo)}</p>}
             </div>
@@ -155,6 +193,19 @@ export default function PembuatReels({ pengajar = "" }) {
             <div><label className="label" htmlFor="rd">Durasi: {durasiKartu} detik</label><input id="rd" type="range" min="6" max="25" value={durasiKartu} onChange={(e) => setDurasiKartu(+e.target.value)} className="w-full" /></div>
           </>
         )}
+
+        <div className="space-y-2 rounded-2xl border-2 border-hijau/15 p-4">
+          <label className="label" htmlFor="rmu">Backsound (opsional)</label>
+          <input id="rmu" type="file" accept="audio/*" className="input" onChange={(e) => setMusik(e.target.files?.[0] || null)} />
+          {musik ? (
+            <>
+              <label className="label" htmlFor="rvol">Volume backsound: {volMusik}%{mode === "video" ? " (kajian tetap 100%)" : ""}</label>
+              <input id="rvol" type="range" min="3" max="40" value={volMusik} onChange={(e) => setVolMusik(+e.target.value)} className="w-full" />
+              <p className="text-sm text-tinta/70">Masuk perlahan di awal, mengecil di akhir, dan diulang bila lebih pendek dari video. Bawaan 12% agar tidak menutupi suara kajian.</p>
+              <button type="button" onClick={() => setMusik(null)} className="text-sm font-medium text-hijau underline">Hapus backsound</button>
+            </>
+          ) : <p className="text-sm text-tinta/70">Pilih berkas MP3/M4A dari HP. Kosongkan bila tidak ingin musik.</p>}
+        </div>
 
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={hd} onChange={(e) => setHd(e.target.checked)} /> Kualitas HD 1080×1920 (lebih berat; bawaan 720×1280 sudah cukup untuk Reels/Status)</label>
 
