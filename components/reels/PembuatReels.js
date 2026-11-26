@@ -2,11 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import { W, H, siapkanReels, gambarReels, pilihFormatRekam } from "@/lib/reels";
 import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
+import BingkaiYouTube from "./BingkaiYouTube";
 
 const tombolGaris = "btn !min-h-[46px] !px-4 border-2 border-hijau/30 text-sm text-hijau hover:bg-hijau-muda disabled:opacity-60";
 
 export default function PembuatReels({ pengajar = "", rekaman = [] }) {
   const [tautan, setTautan] = useState("");
+  const [bingkai, setBingkai] = useState(false);
   const [mode, setMode] = useState("video");
   const [judul, setJudul] = useState("Faidah Kajian Pekan Ini");
   const [sub, setSub] = useState(pengajar ? `Ustadz ${pengajar.replace(/^Ustadz\s+/i, "")}` : "");
@@ -70,7 +72,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
     let awal = 0, akhir = durasiKartu;
     if (mode === "video") {
       const v = videoRef.current;
-      if (!v || !berkas) return setGalat("Pilih video kajian lebih dulu.");
+      if (!v || !berkas) return setGalat("Untuk berkas MP4, pilih video yang sudah diunduh. Untuk tanpa unduh, pakai tombol \"Putar klip dalam bingkai Reels\" di atas.");
       if (Number.isNaN(mulaiDt) || Number.isNaN(selesaiDt)) return setGalat("Format waktu tidak dikenali. Contoh: 10.22");
       awal = mulaiDt ?? 0; akhir = selesaiDt ?? Math.min(v.duration, awal + 60);
       if (akhir > v.duration) akhir = v.duration;
@@ -141,6 +143,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
 
   return (
     <div className="grid gap-5 md:grid-cols-[1fr_300px]">
+      {bingkai && idYt && <BingkaiYouTube id={idYt} mulai={Number.isFinite(mulaiDt) ? mulaiDt : null} selesai={Number.isFinite(selesaiDt) ? selesaiDt : null} judul={judul || "Judul Reels"} sub={sub} onTutup={() => setBingkai(false)} />}
       <div className="space-y-4">
         <div className="flex gap-2">
           {[["video", "Dari video kajian"], ["kartu", "Kartu teks saja"]].map(([k, l]) => (
@@ -170,6 +173,8 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
                     <iframe key={`${idYt}-${mulaiDt ?? 0}`} src={`https://www.youtube-nocookie.com/embed/${idYt}?rel=0${Number.isFinite(mulaiDt) && mulaiDt != null ? `&start=${mulaiDt}` : ""}`} title="Pratinjau rekaman" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen className="absolute inset-0 h-full w-full" />
                   </div>
                   <p className="text-sm text-tinta/70">Putar dan catat menit mulai dan selesai bagian yang diinginkan, lalu isi kolom Mulai dan Selesai di bawah.</p>
+                  <button type="button" onClick={() => { if (Number.isNaN(mulaiDt) || Number.isNaN(selesaiDt)) setGalat("Format waktu tidak dikenali. Contoh: 10.22"); else if (selesaiDt != null && selesaiDt <= (mulaiDt ?? 0)) setGalat("Waktu selesai harus setelah waktu mulai."); else { setGalat(""); setBingkai(true); } }} className="btn-hijau !min-h-[46px] w-full">Putar klip dalam bingkai Reels (otomatis terpotong)</button>
+                  <p className="text-sm text-tinta/70">Isi Mulai dan Selesai di bawah dulu. Klip langsung tampil di bingkai KBA-UMM layar penuh 9:16; untuk menyimpannya jadi video, gunakan Rekam Layar HP.</p>
                   <a href={`https://studio.youtube.com/video/${idYt}/edit`} target="_blank" rel="noopener noreferrer" className={tombolGaris}>Buka di YouTube Studio untuk mengunduh video</a>
                   <p className="text-sm text-tinta/70">Di YouTube Studio: ikon titik tiga (Opsi) → <b>Unduh</b>. Hanya pemilik channel yang bisa mengunduh videonya. Setelah terunduh, lanjut ke langkah 2.</p>
                 </>
@@ -177,7 +182,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
               {tautan.trim() && !idYt && <p className="text-sm font-medium text-red-700">Tautan YouTube tidak dikenali.</p>}
             </div>
             <div>
-              <label className="label" htmlFor="rv">Langkah 2 · Pilih video yang sudah diunduh (atau dari galeri)</label>
+              <label className="label" htmlFor="rv">Opsi berkas MP4 · Pilih video yang sudah diunduh (atau dari galeri)</label>
               <input id="rv" type="file" accept="video/*" className="input" onChange={(e) => pilihBerkas(e.target.files?.[0])} />
               {durVideo > 0 && <p className="mt-1 text-sm text-tinta/70">Durasi video: {dariDetik(durVideo)}</p>}
             </div>
