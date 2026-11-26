@@ -4,7 +4,7 @@ import { dariDetik } from "@/lib/youtube";
 
 // Layar penuh 9:16: rekaman YouTube otomatis terpotong (mulai–selesai) dan tampil di dalam bingkai KBA-UMM.
 // Cocok untuk direkam dengan fitur rekam layar HP (suara ikut terekam).
-export default function BingkaiYouTube({ id, mulai, selesai, judul, sub, onTutup }) {
+export default function BingkaiYouTube({ id, mulai, selesai, judul, pemateri, kelas, ke, subtitle = true, onTutup }) {
   const [skala, setSkala] = useState(0.3);
   const [putar, setPutar] = useState(false);
   const [menu, setMenu] = useState(true);
@@ -13,7 +13,7 @@ export default function BingkaiYouTube({ id, mulai, selesai, judul, sub, onTutup
     const atur = () => setSkala(Math.min(window.innerWidth / 1080, window.innerHeight / 1920));
     atur(); window.addEventListener("resize", atur); return () => window.removeEventListener("resize", atur);
   }, []);
-  const src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&modestbranding=1${mulai != null ? `&start=${mulai}` : ""}${selesai != null ? `&end=${selesai}` : ""}`;
+  const src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&modestbranding=1${subtitle ? "&cc_load_policy=1&cc_lang_pref=id&hl=id" : ""}${mulai != null ? `&start=${mulai}` : ""}${selesai != null ? `&end=${selesai}` : ""}`;
   const ar = /[؀-ۿ]/.test(judul);
 
   return (
@@ -23,10 +23,14 @@ export default function BingkaiYouTube({ id, mulai, selesai, judul, sub, onTutup
           <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 22%, rgba(245,184,0,0.2), transparent 55%)" }} />
           <p style={{ position: "absolute", top: 70, left: 0, right: 0, fontSize: 50, fontWeight: 800, letterSpacing: 10 }}>KBA-UMM</p>
           <p style={{ position: "absolute", top: 142, left: 0, right: 0, fontSize: 26, fontWeight: 500, color: "#F5B800" }}>Kuliah Bahasa Arab Untuk Meraih Mahabatullah</p>
-          <p className="arab" lang="ar" style={{ position: "absolute", top: 186, left: 0, right: 0, fontSize: 36, fontWeight: 600, color: "#F5B800" }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-          <h2 dir="auto" style={{ position: "absolute", top: 270, left: 75, right: 75, fontSize: judul.length > 40 ? 64 : 84, lineHeight: 1.25, fontWeight: 800, fontFamily: ar ? undefined : "inherit" }}>{judul}</h2>
-          <div style={{ position: "absolute", top: 560, left: 480, width: 120, height: 8, borderRadius: 4, background: "#F5B800" }} />
-          {sub && <p style={{ position: "absolute", top: 610, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", background: "#F5B800", color: "#14582A", fontWeight: 600, fontSize: 32, padding: "12px 40px", borderRadius: 40 }}>{sub}</p>}
+          <h2 dir="auto" style={{ position: "absolute", top: 230, left: 75, right: 75, fontSize: judul.length > 40 ? 64 : 84, lineHeight: 1.25, fontWeight: 800, fontFamily: ar ? undefined : "inherit" }}>{judul}</h2>
+          <div style={{ position: "absolute", top: 575, left: 480, width: 120, height: 8, borderRadius: 4, background: "#F5B800" }} />
+          {pemateri && (
+            <p style={{ position: "absolute", top: 625, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", background: "#F5B800", color: "#14582A", fontWeight: 600, fontSize: 32, padding: "12px 44px 12px 30px", borderRadius: 40, display: "flex", alignItems: "center", gap: 16 }}>
+              <svg width="34" height="38" viewBox="0 0 24 28" fill="none" stroke="#14582A" strokeWidth="2.4" strokeLinecap="round" aria-hidden><rect x="8" y="1.5" width="8" height="14" rx="4" fill="#14582A" /><path d="M4 12a8 8 0 0 0 16 0M12 20v5M7.5 25h9" /></svg>
+              {pemateri}
+            </p>
+          )}
 
           <div style={{ position: "absolute", left: 60, right: 60, top: 760, aspectRatio: "16 / 9", borderRadius: 26, overflow: "hidden", border: "6px solid #F5B800", background: "#000", boxShadow: "0 24px 60px rgba(0,0,0,.45)" }}>
             {putar ? (
@@ -43,9 +47,10 @@ export default function BingkaiYouTube({ id, mulai, selesai, judul, sub, onTutup
               </button>
             )}
           </div>
-          <p style={{ position: "absolute", top: 760 + 585 + 40, left: 0, right: 0, fontSize: 28, fontWeight: 600, color: "rgba(255,255,255,.88)" }}>
-            Klip kajian{mulai != null ? ` · ${dariDetik(mulai)}${selesai != null ? `–${dariDetik(selesai)}` : ""}` : ""}
+          <p style={{ position: "absolute", top: 760 + 585 + 36, left: 0, right: 0, fontSize: 28, fontWeight: 600, color: "rgba(255,255,255,.92)" }}>
+            Potongan Rekaman{ke ? ` Pertemuan ke-${ke}` : ""}{mulai != null ? ` · ${dariDetik(mulai)}${selesai != null ? `–${dariDetik(selesai)}` : ""}` : ""}
           </p>
+          {kelas && <p style={{ position: "absolute", top: 760 + 585 + 90, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontWeight: 700, fontSize: 32, padding: "12px 45px", borderRadius: 40, border: "3px solid #F5B800", background: "rgba(255,255,255,.12)" }}>{kelas}</p>}
 
           <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 170, background: "rgba(0,0,0,.3)", borderTop: "4px solid #F5B800" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}

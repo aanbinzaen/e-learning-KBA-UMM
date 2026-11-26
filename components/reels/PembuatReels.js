@@ -4,14 +4,18 @@ import { W, H, siapkanReels, gambarReels, pilihFormatRekam } from "@/lib/reels";
 import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
 import BingkaiYouTube from "./BingkaiYouTube";
 
+const labelPotongan = (ke, a, b) => `Potongan Rekaman${ke ? ` Pertemuan ke-${ke}` : ""}${a ? ` · ${a}${b ? `–${b}` : ""}` : ""}`;
 const tombolGaris = "btn !min-h-[46px] !px-4 border-2 border-hijau/30 text-sm text-hijau hover:bg-hijau-muda disabled:opacity-60";
 
 export default function PembuatReels({ pengajar = "", rekaman = [] }) {
   const [tautan, setTautan] = useState("");
   const [bingkai, setBingkai] = useState(false);
+  const [subYt, setSubYt] = useState(true);
   const [mode, setMode] = useState("video");
   const [judul, setJudul] = useState("Faidah Kajian Pekan Ini");
-  const [sub, setSub] = useState(pengajar ? `Ustadz ${pengajar.replace(/^Ustadz\s+/i, "")}` : "");
+  const [pemateri, setPemateri] = useState(pengajar ? `Ustadz ${pengajar.replace(/^Ustadz\s+/i, "")}` : "");
+  const [kelas, setKelas] = useState("");
+  const [ke, setKe] = useState("");
   const [isi, setIsi] = useState("");
   const [mulai, setMulai] = useState("");
   const [selesai, setSelesai] = useState("");
@@ -30,7 +34,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
 
   const mulaiDt = keDetik(mulai), selesaiDt = keDetik(selesai), idYt = idYouTube(tautan);
   const judulDiubah = useRef(false);
-  stateRef.current = { mode, judul, sub, isi, video: mode === "video" ? videoRef.current : null, sibuk };
+  stateRef.current = { mode, judul, pemateri, kelas, label: labelPotongan(ke, mulai, selesai), isi, video: mode === "video" ? videoRef.current : null, sibuk };
 
   // pratinjau
   useEffect(() => {
@@ -44,7 +48,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         if (k && !stateRef.current.sibuk) {
           const st = stateRef.current, det = (performance.now() - t0) / 1000;
           const t = st.mode === "video" ? Math.min(det % 7, 3.2) : det % 11;
-          gambarReels(k.getContext("2d"), { ...st, label: "" }, asetRef.current, t, 10);
+          gambarReels(k.getContext("2d"), st, asetRef.current, t, 10);
         }
         raf = requestAnimationFrame(loop);
       };
@@ -104,7 +108,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       const rec = new MediaRecorder(alur, { mimeType: format.mime, videoBitsPerSecond: hd ? 6_000_000 : 3_500_000 });
       const potong = []; rec.ondataavailable = (e) => e.data.size && potong.push(e.data);
       const selesaiRekam = new Promise((ok) => { rec.onstop = ok; });
-      const st = { judul, sub, isi, video: v, label: mode === "video" ? `Klip kajian · ${dariDetik(awal)}–${dariDetik(akhir)}` : "" };
+      const st = { judul, pemateri, kelas, isi, video: v, label: mode === "video" ? labelPotongan(ke, dariDetik(awal), dariDetik(akhir)) : "" };
       rec.start(500);
       const t0 = performance.now();
       if (v) await v.play();
@@ -143,7 +147,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
 
   return (
     <div className="grid gap-5 md:grid-cols-[1fr_300px]">
-      {bingkai && idYt && <BingkaiYouTube id={idYt} mulai={Number.isFinite(mulaiDt) ? mulaiDt : null} selesai={Number.isFinite(selesaiDt) ? selesaiDt : null} judul={judul || "Judul Reels"} sub={sub} onTutup={() => setBingkai(false)} />}
+      {bingkai && idYt && <BingkaiYouTube id={idYt} mulai={Number.isFinite(mulaiDt) ? mulaiDt : null} selesai={Number.isFinite(selesaiDt) ? selesaiDt : null} judul={judul || "Judul Reels"} pemateri={pemateri} kelas={kelas} ke={ke} subtitle={subYt} onTutup={() => setBingkai(false)} />}
       <div className="space-y-4">
         <div className="flex gap-2">
           {[["video", "Dari video kajian"], ["kartu", "Kartu teks saja"]].map(([k, l]) => (
@@ -152,7 +156,11 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         </div>
 
         <div><label className="label" htmlFor="rj">Judul reels</label><input id="rj" className="input" value={judul} onChange={(e) => { judulDiubah.current = true; setJudul(e.target.value); }} maxLength={120} /></div>
-        <div><label className="label" htmlFor="rs">Keterangan di bawah judul (kelas / pengajar)</label><input id="rs" className="input" value={sub} onChange={(e) => setSub(e.target.value)} maxLength={70} placeholder="Kelas Imam Ibnu Hisyam · Ustadz Aan" /></div>
+        <div><label className="label" htmlFor="rp">Nama pemateri (tampil dengan ikon mikrofon)</label><input id="rp" className="input" value={pemateri} onChange={(e) => setPemateri(e.target.value)} maxLength={60} placeholder="Ustadz Aan Bin Zaen, S.Pd" /></div>
+        <div className="grid grid-cols-[1fr_120px] gap-3">
+          <div><label className="label" htmlFor="rkl">Kelas (tampil di bawah kotak rekaman)</label><input id="rkl" className="input" value={kelas} onChange={(e) => setKelas(e.target.value)} maxLength={60} placeholder="Kelas Abul Aswad Ad-Du'aliy" /></div>
+          <div><label className="label" htmlFor="rke">Pertemuan ke</label><input id="rke" className="input" inputMode="numeric" value={ke} onChange={(e) => setKe(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} placeholder="4" /></div>
+        </div>
 
         {mode === "video" ? (
           <>
@@ -160,7 +168,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
               <p className="font-medium text-hijau-tua">Langkah 1 · Cari menit di rekaman YouTube</p>
               {rekaman.length > 0 && (
                 <div><label className="label" htmlFor="rr">Pilih dari rekaman kelas</label>
-                  <select id="rr" className="input" value="" onChange={(e) => { if (e.target.value) { setTautan(`https://youtu.be/${e.target.value}`); const r = rekaman.find((x) => x.youtube_id === e.target.value); if (r && !judulDiubah.current) setJudul(r.judul); } }}>
+                  <select id="rr" className="input" value="" onChange={(e) => { if (e.target.value) { setTautan(`https://youtu.be/${e.target.value}`); const r = rekaman.find((x) => x.youtube_id === e.target.value); if (r) { const m = r.pertemuan.match(/pertemuan\s*(?:ke)?[-\s]*(\d+)/i) || r.judul.match(/pertemuan\s*(?:ke)?[-\s]*(\d+)/i); if (m) setKe(m[1]); if (!judulDiubah.current) setJudul(r.judul); } } }}>
                     <option value="">— pilih rekaman —</option>
                     {rekaman.map((r) => <option key={r.id} value={r.youtube_id}>{r.pertemuan ? `${r.pertemuan} · ` : ""}{r.judul}</option>)}
                   </select>
@@ -173,6 +181,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
                     <iframe key={`${idYt}-${mulaiDt ?? 0}`} src={`https://www.youtube-nocookie.com/embed/${idYt}?rel=0${Number.isFinite(mulaiDt) && mulaiDt != null ? `&start=${mulaiDt}` : ""}`} title="Pratinjau rekaman" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen className="absolute inset-0 h-full w-full" />
                   </div>
                   <p className="text-sm text-tinta/70">Putar dan catat menit mulai dan selesai bagian yang diinginkan, lalu isi kolom Mulai dan Selesai di bawah.</p>
+                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={subYt} onChange={(e) => setSubYt(e.target.checked)} /> Tampilkan subtitle otomatis YouTube (bila tersedia)</label>
                   <button type="button" onClick={() => { if (Number.isNaN(mulaiDt) || Number.isNaN(selesaiDt)) setGalat("Format waktu tidak dikenali. Contoh: 10.22"); else if (selesaiDt != null && selesaiDt <= (mulaiDt ?? 0)) setGalat("Waktu selesai harus setelah waktu mulai."); else { setGalat(""); setBingkai(true); } }} className="btn-hijau !min-h-[46px] w-full">Putar klip dalam bingkai Reels (otomatis terpotong)</button>
                   <p className="text-sm text-tinta/70">Isi Mulai dan Selesai di bawah dulu. Klip langsung tampil di bingkai KBA-UMM layar penuh 9:16; untuk menyimpannya jadi video, gunakan Rekam Layar HP.</p>
                   <a href={`https://studio.youtube.com/video/${idYt}/edit`} target="_blank" rel="noopener noreferrer" className={tombolGaris}>Buka di YouTube Studio untuk mengunduh video</a>
