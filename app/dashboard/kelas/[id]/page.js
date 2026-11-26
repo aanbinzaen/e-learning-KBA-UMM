@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ambilSesi } from "@/lib/auth";
 import { tanggalIndo } from "@/lib/data";
 import YouTubePlayer from "@/components/YouTubePlayer";
+import { dariDetik } from "@/lib/youtube";
 import TombolSelesai from "../TombolSelesai";
 
 export const metadata = { title: "Pertemuan" };
@@ -14,7 +15,7 @@ export default async function DetailKelas({ params }) {
   if (!p) notFound();
   const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }, { data: kuis }, { data: perc }] = await Promise.all([
     supabase.from("materi").select("id,jenis,judul,catatan,file_path").eq("pertemuan_id", p.id).order("dibuat_pada"),
-    supabase.from("rekaman").select("id,judul,youtube_id").eq("pertemuan_id", p.id).order("dibuat_pada"),
+    supabase.from("rekaman").select("*").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("progres").select("item_id").eq("profile_id", user.id),
     supabase.from("grup_tautan").select("link").eq("grup_id", p.grup_id).maybeSingle(),
     supabase.from("kuis").select("id,judul").eq("pertemuan_id", p.id).eq("diterbitkan", true).order("dibuat_pada"),
@@ -69,8 +70,8 @@ export default async function DetailKelas({ params }) {
         <h2 className="text-lg font-semibold text-hijau-tua">Rekaman</h2>
         {(rekaman || []).map((r) => (
           <article key={r.id} className="kartu space-y-3">
-            <YouTubePlayer id={r.youtube_id} judul={r.judul} />
-            <h3 className="font-semibold">{r.judul}</h3>
+            <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />
+            <h3 className="font-semibold">{r.judul}{(r.mulai_detik != null || r.selesai_detik != null) && <span className="ml-2 rounded-full bg-kuning/30 px-2 py-0.5 text-xs font-semibold text-hijau-tua">Klip {dariDetik(r.mulai_detik || 0)}{r.selesai_detik != null ? `–${dariDetik(r.selesai_detik)}` : ""}</span>}</h3>
             <TombolSelesai jenis="rekaman" itemId={r.id} awal={sudah.has(r.id)} />
           </article>
         ))}

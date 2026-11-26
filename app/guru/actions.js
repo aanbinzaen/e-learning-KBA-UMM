@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ambilSesi } from "@/lib/auth";
 import { bersih } from "@/lib/validasi";
 import { dariInputWIB } from "@/lib/waktu";
-import { idYouTube } from "@/lib/youtube";
+import { idYouTube, keDetik } from "@/lib/youtube";
 import { validasiSoal } from "@/lib/soal";
 import { kirimPush } from "@/lib/push";
 import { tanggalIndo } from "@/lib/data";
@@ -97,10 +97,16 @@ export async function tambahRekaman(pertemuanId, grupId, _prev, fd) {
   const judul = bersih(fd.get("judul")), id = idYouTube(fd.get("link"));
   if (!judul) return { galat: "Judul rekaman wajib diisi." };
   if (!id) return { galat: "Tautan YouTube tidak dikenali. Salin dari tombol Bagikan di YouTube." };
-  const { error } = await s.supabase.from("rekaman").insert({ pertemuan_id: pertemuanId, grup_id: grupId, judul, youtube_id: id });
-  if (error) return TIDAK;
+  const mulai = keDetik(fd.get("mulai")), selesai = keDetik(fd.get("selesai"));
+  if (Number.isNaN(mulai) || Number.isNaN(selesai)) return { galat: "Format waktu tidak dikenali. Contoh: 12:30 atau 1:05:00." };
+  if (selesai != null && selesai <= (mulai ?? 0)) return { galat: "Waktu selesai harus setelah waktu mulai." };
+  const baris = { pertemuan_id: pertemuanId, grup_id: grupId, judul, youtube_id: id };
+  if (mulai != null) baris.mulai_detik = mulai;
+  if (selesai != null) baris.selesai_detik = selesai;
+  const { error } = await s.supabase.from("rekaman").insert(baris);
+  if (error) return (mulai != null || selesai != null) ? { galat: "Klip belum bisa disimpan. Pastikan SQL 15 sudah dijalankan." } : TIDAK;
   segarkan(pertemuanId);
-  return { ok: "Rekaman ditambahkan." };
+  return { ok: mulai != null || selesai != null ? "Klip kajian ditambahkan." : "Rekaman ditambahkan." };
 }
 
 export async function hapusRekaman(id, pertemuanId) {

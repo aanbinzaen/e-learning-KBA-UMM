@@ -2,13 +2,13 @@
 import { useState } from "react";
 
 // Memuat thumbnail dulu (ringan); iframe YouTube baru dimuat saat diputar.
-export default function YouTubePlayer({ id, judul }) {
+export default function YouTubePlayer({ id, judul, mulai, selesai }) {
   const [putar, setPutar] = useState(false);
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black">
       {putar ? (
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`}
+          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0${mulai != null ? `&start=${mulai}` : ""}${selesai != null ? `&end=${selesai}` : ""}`}
           title={judul}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen

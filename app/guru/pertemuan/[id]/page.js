@@ -5,6 +5,7 @@ import { keInputWIB } from "@/lib/waktu";
 import FormAksi from "@/components/FormAksi";
 import TombolHapus from "@/components/TombolHapus";
 import YouTubePlayer from "@/components/YouTubePlayer";
+import { dariDetik } from "@/lib/youtube";
 import FormPdf from "./FormPdf";
 import FormGambar from "./FormGambar";
 import { kirimPengingat, buatKuis, ubahAbsensiBuka, ubahPertemuan, hapusPertemuan, tambahCatatan, tambahRekaman, hapusMateri, hapusRekaman } from "@/app/guru/actions";
@@ -15,7 +16,7 @@ export default async function DetailPertemuan({ params }) {
   if (!p) notFound();
   const [{ data: materi }, { data: rekaman }, { data: kuis }] = await Promise.all([
     supabase.from("materi").select("id,jenis,judul").eq("pertemuan_id", p.id).order("dibuat_pada"),
-    supabase.from("rekaman").select("id,judul,youtube_id").eq("pertemuan_id", p.id).order("dibuat_pada"),
+    supabase.from("rekaman").select("*").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("kuis").select("id,judul,diterbitkan").eq("pertemuan_id", p.id).order("dibuat_pada"),
   ]);
   const Kotak = ({ judul, children }) => <section className="kartu space-y-3"><h2 className="text-lg font-semibold text-hijau">{judul}</h2>{children}</section>;
@@ -65,13 +66,18 @@ export default async function DetailPertemuan({ params }) {
       <Kotak judul={`Rekaman YouTube (${rekaman?.length || 0})`}>
         {(rekaman || []).map((r) => (
           <div key={r.id} className="space-y-2">
-            <YouTubePlayer id={r.youtube_id} judul={r.judul} />
-            <div className="flex items-center justify-between gap-2"><p className="font-medium">{r.judul}</p><TombolHapus aksi={hapusRekaman.bind(null, r.id, p.id)} pesan="Hapus rekaman ini?" /></div>
+            <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />
+            <div className="flex items-center justify-between gap-2"><p className="font-medium">{r.judul}{(r.mulai_detik != null || r.selesai_detik != null) && <span className="ml-2 rounded-full bg-kuning/30 px-2 py-0.5 text-xs font-semibold text-hijau-tua">Klip {dariDetik(r.mulai_detik || 0)}{r.selesai_detik != null ? `–${dariDetik(r.selesai_detik)}` : ""}</span>}</p><TombolHapus aksi={hapusRekaman.bind(null, r.id, p.id)} pesan="Hapus rekaman ini?" /></div>
           </div>
         ))}
         <FormAksi aksi={tambahRekaman.bind(null, p.id, p.grup_id)} kirim="Tambah rekaman" reset className="space-y-4 rounded-2xl border-2 border-hijau/15 p-4">
           <div><label className="label" htmlFor="jr">Judul rekaman</label><input id="jr" name="judul" className="input" required /></div>
           <div><label className="label" htmlFor="lk">Tautan YouTube</label><input id="lk" name="link" className="input" placeholder="https://youtu.be/…" required /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="label" htmlFor="km">Klip mulai (opsional)</label><input id="km" name="mulai" className="input" placeholder="12:30" inputMode="numeric" /></div>
+            <div><label className="label" htmlFor="ks">Klip selesai (opsional)</label><input id="ks" name="selesai" className="input" placeholder="15:45" inputMode="numeric" /></div>
+          </div>
+          <p className="text-sm text-tinta/70">Kosongkan keduanya untuk rekaman utuh. Isi untuk memotong kajian pendek dari rekaman panjang.</p>
         </FormAksi>
       </Kotak>
 

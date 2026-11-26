@@ -14,3 +14,7 @@ Menu **Pengumuman** (pengajar) dan **Pengumuman & Flyer** (admin), alamat `/guru
 Jalankan sekali di Supabase SQL Editor: `supabase/14_materi_gambar.sql`
 (jika error pada baris `alter type`, jalankan baris itu sendiri dulu, lalu sisanya).
 Setelah itu di halaman pertemuan pengajar/admin muncul "+ Unggah gambar (PNG/JPG)".
+
+## Klip kajian (potongan rekaman YouTube)
+Jalankan sekali: `supabase/15_klip_kajian.sql` SEBELUM/bersamaan dengan upload kode.
+Di form "Rekaman YouTube" isi "Klip mulai" dan "Klip selesai" (mis. 12:30 dan 15:45) untuk memutar potongan saja.
