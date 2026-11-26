@@ -21,7 +21,8 @@ export default function PembuatFlyer({ tujuan = [], admin = false, pengajar = ""
   const nomor = useRef(0);
 
   const tj = tujuan[iTujuan] || null;
-  const teksOtomatis = useMemo(() => susunTeksWa(d), [d]);
+  const situs = typeof window !== "undefined" ? `https://${window.location.host}/masuk` : "";
+  const teksOtomatis = useMemo(() => susunTeksWa(d, situs), [d, situs]);
   const teks = teksManual ?? teksOtomatis;
   const ubah = (kunci, nilai) => setD((x) => ({ ...x, [kunci]: nilai }));
   const ubahBaris = (i, kunci, nilai) => setD((x) => ({ ...x, baris: x.baris.map((b, k) => (k === i ? { ...b, [kunci]: nilai } : b)) }));
