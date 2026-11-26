@@ -6,6 +6,19 @@ import BingkaiYouTube from "./BingkaiYouTube";
 import { jadikanProgresif } from "@/lib/mp4Lurus";
 
 const labelPotongan = (ke, a, b) => `Potongan Rekaman${ke ? ` Pertemuan ke-${ke}` : ""}${a ? ` · ${a}${b ? `–${b}` : ""}` : ""}`;
+function susunCaption({ judul, pemateri, kelas, ke, isi, mode, idYt, mulai, host }) {
+  const b = [];
+  b.push(`✨ ${(judul || "Faidah Kajian").trim()}`);
+  if (pemateri?.trim()) b.push(`🎙️ ${pemateri.trim()}`);
+  const kls = [kelas?.trim(), ke ? `Pertemuan ke-${ke}` : ""].filter(Boolean).join(" · ");
+  if (kls) b.push(`📚 ${kls}`);
+  if (mode === "kartu" && isi?.trim()) b.push("", isi.trim());
+  b.push("", mode === "video" ? "Potongan rekaman kajian KBA-UMM (Kuliah Bahasa Arab Untuk Meraih Mahabatullah)." : "Faidah dari kajian KBA-UMM (Kuliah Bahasa Arab Untuk Meraih Mahabatullah).");
+  if (idYt) b.push(`▶️ Rekaman lengkap: https://youtu.be/${idYt}${Number.isFinite(mulai) && mulai ? `?t=${mulai}` : ""}`);
+  if (host) b.push(`🌐 Belajar bersama di e-learning: https://${host}`);
+  b.push("", "Semoga bermanfaat, jangan lupa bagikan 🤲", "", "#KBAUMM #BelajarBahasaArab #KajianBahasaArab #RumahDakwahMalang #PesantrenOnline");
+  return b.join("\n");
+}
 const tombolGaris = "btn !min-h-[46px] !px-4 border-2 border-hijau/30 text-sm text-hijau hover:bg-hijau-muda disabled:opacity-60";
 
 export default function PembuatReels({ pengajar = "", rekaman = [] }) {
@@ -35,6 +48,14 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
 
   const mulaiDt = keDetik(mulai), selesaiDt = keDetik(selesai), idYt = idYouTube(tautan);
   const judulDiubah = useRef(false);
+  const [captionManual, setCaptionManual] = useState(null);
+  const [tersalin, setTersalin] = useState(false);
+  const host = typeof window !== "undefined" ? window.location.host : "";
+  const captionOtomatis = susunCaption({ judul, pemateri, kelas, ke, isi, mode, idYt, mulai: mulaiDt, host });
+  const caption = captionManual ?? captionOtomatis;
+  async function salinCaption() {
+    try { await navigator.clipboard.writeText(caption); setTersalin(true); setTimeout(() => setTersalin(false), 2000); } catch { setGalat("Caption tidak bisa disalin otomatis. Tekan lama teks caption lalu salin."); }
+  }
   stateRef.current = { mode, judul, pemateri, kelas, label: labelPotongan(ke, mulai, selesai), isi, video: mode === "video" ? videoRef.current : null, sibuk };
 
   // pratinjau
@@ -147,7 +168,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
   const nama = `reels-kba-umm-${judul.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "klip"}.${hasil?.ext || "mp4"}`;
   async function bagikan() {
     const f = new File([hasil.blob], nama, { type: hasil.blob.type });
-    if (navigator.canShare?.({ files: [f] })) { try { await navigator.share({ files: [f], title: judul }); } catch { /* dibatalkan */ } }
+    if (navigator.canShare?.({ files: [f] })) { try { await navigator.share({ files: [f], title: judul, text: caption }); } catch { /* dibatalkan */ } }
     else setGalat("Berbagi langsung belum didukung di perangkat ini. Gunakan tombol Unduh.");
   }
 
@@ -236,6 +257,15 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         </div>
         {status && <p className="text-sm text-hijau" role="status">{status}</p>}
         {galat && <p className="text-sm font-medium text-red-700" role="alert">{galat}</p>}
+        <div className="space-y-2 rounded-2xl border-2 border-hijau/15 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <label className="label !mb-0" htmlFor="rcap">Caption otomatis (siap dibagikan)</label>
+            <button type="button" onClick={salinCaption} className={tombolGaris}>{tersalin ? "Tersalin ✓" : "Salin caption"}</button>
+          </div>
+          <textarea id="rcap" className="input min-h-[190px] text-sm" value={caption} onChange={(e) => setCaptionManual(e.target.value)} dir="auto" />
+          {captionManual !== null && <button type="button" onClick={() => setCaptionManual(null)} className="text-sm font-medium text-hijau underline">Kembalikan caption otomatis</button>}
+          <p className="text-sm text-tinta/70">Caption mengikuti isian di atas. Tempel saat mengunggah ke Instagram, TikTok, atau grup WhatsApp. Tombol Bagikan juga ikut membawa caption.</p>
+        </div>
         {hasil?.ext === "webm" && <p className="text-sm text-tinta/70">Peramban ini menghasilkan WebM. Bila Instagram menolak, buka halaman ini di Chrome terbaru (menghasilkan MP4) atau ubah dulu ke MP4.</p>}
       </div>
 
