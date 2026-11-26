@@ -11,6 +11,15 @@ const GALAT = {
   status_salah: "Pilihan tidak valid.",
 };
 
+// Dipanggil saat peserta menekan "Gabung Kelas": pada jam kelas, kehadiran tercatat otomatis.
+export async function gabungKelas() {
+  const s = await ambilSesi();
+  if (!s?.profil?.aktif) return { ok: false };
+  const { data } = await s.supabase.rpc("gabung_kelas");
+  revalidatePath("/dashboard"); revalidatePath("/dashboard/absensi");
+  return { ok: true, tercatat: !!data };
+}
+
 export async function isiAbsensi(pertemuanId, status) {
   const s = await ambilSesi();
   if (!s?.profil?.aktif) return { ok: false, pesan: "Silakan masuk kembali." };
