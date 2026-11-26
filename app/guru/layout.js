@@ -7,7 +7,7 @@ export default async function GuruLayout({ children }) {
   return (
     <div className="bagian !max-w-4xl">
       <nav className="no-print mb-6 flex flex-wrap gap-2" aria-label="Menu pengajar">
-        {[["/guru", "Pertemuan"], ["/guru/rekap", "Peserta & Rekap"], ["/guru/rapor", "Rapor"], ["/guru/laporan", "Laporan"], ["/guru/faidah", "Faidah"], ["/guru/diagram", "Diagram"], ["/guru/pengumuman", "Pengumuman"], ["/guru/ruang", "Ruang Pengajar"]].map(([h, l]) => (
+        {[["/guru", "Pertemuan"], ["/guru/rekap", "Peserta & Rekap"], ["/guru/rapor", "Rapor"], ["/guru/laporan", "Laporan"], ["/guru/faidah", "Faidah"], ["/guru/diagram", "Diagram"], ["/guru/pengumuman", "Pengumuman"], ["/guru/reels", "Reels"], ["/guru/ruang", "Ruang Pengajar"]].map(([h, l]) => (
           <Link key={h} href={h} className="rounded-2xl border-2 border-hijau/20 bg-white px-4 py-2.5 text-sm font-medium text-hijau hover:bg-hijau-muda">{l}</Link>
         ))}
       </nav>

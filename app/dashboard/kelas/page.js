@@ -14,7 +14,7 @@ export default async function KelasSaya({ searchParams }) {
     const semuaGrup = await grupDiampu(supabase, profil);
     const aktif = semuaGrup.find((g) => g.id === searchParams?.grup) || semuaGrup[0];
     if (!aktif) return <p className="kartu">Belum ada grup yang bisa dibuka.</p>;
-    const { data: daftarGrup } = await supabase.from("pertemuan").select("id,judul,waktu,absensi_buka,materi(id),rekaman(id),kuis(id)").eq("grup_id", aktif.id).order("waktu", { ascending: false });
+    const { data: daftarGrup } = await supabase.from("pertemuan").select("id,judul,waktu,absensi_buka,materi(id),rekaman(id,mulai_detik,selesai_detik),kuis(id)").eq("grup_id", aktif.id).order("waktu", { ascending: false });
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-hijau-tua">Lihat kelas</h1>
@@ -35,19 +35,23 @@ export default async function KelasSaya({ searchParams }) {
   const { data: pg } = await supabase.from("peserta_grup").select("grup_id,grup(nama)").eq("profile_id", user.id).maybeSingle();
   if (!pg) return <p className="kartu">Anda belum ditempatkan di grup. Hubungi admin.</p>;
 
-  const [{ data: daftar }, { data: selesai }] = await Promise.all([
+  const [{ data: daftar }, { data: selesai }, { data: absRows }] = await Promise.all([
     supabase.from("pertemuan").select("id,judul,waktu,materi(id),rekaman(id),kuis(id)").eq("grup_id", pg.grup_id).order("waktu", { ascending: false }),
     supabase.from("progres").select("item_id").eq("profile_id", user.id),
+    supabase.from("absensi").select("pertemuan_id").eq("profile_id", user.id).eq("status", "hadir"),
   ]);
   const sudah = new Set((selesai || []).map((x) => x.item_id));
+  const hadirDi = new Set((absRows || []).map((x) => x.pertemuan_id));
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-hijau-tua">Kelas saya</h1>
       <p className="text-tinta/80">{pg.grup?.nama}</p>
       {(daftar || []).map((p) => {
-        const item = [...p.materi, ...p.rekaman, ...p.kuis.filter((x) => x.id)];
-        const n = item.filter((x) => sudah.has(x.id)).length;
+        const rekamanUtuh = p.rekaman.filter((x) => x.mulai_detik == null && x.selesai_detik == null); // klip kajian tanpa tanda selesai
+        const item = [...p.materi, ...rekamanUtuh, ...p.kuis.filter((x) => x.id)];
+        const otomatis = hadirDi.has(p.id) ? new Set([...p.materi, ...rekamanUtuh].map((x) => x.id)) : new Set();
+        const n = item.filter((x) => sudah.has(x.id) || otomatis.has(x.id)).length;
         const persen = item.length ? Math.round((n / item.length) * 100) : 0;
         return (
           <Link key={p.id} href={`/dashboard/kelas/${p.id}`} className="kartu block hover:bg-hijau-muda">

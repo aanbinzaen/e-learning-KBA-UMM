@@ -18,3 +18,9 @@ Setelah itu di halaman pertemuan pengajar/admin muncul "+ Unggah gambar (PNG/JPG
 ## Klip kajian (potongan rekaman YouTube)
 Jalankan sekali: `supabase/15_klip_kajian.sql` SEBELUM/bersamaan dengan upload kode.
 Di form "Rekaman YouTube" isi "Klip mulai" dan "Klip selesai" (mis. 12:30 dan 15:45) untuk memutar potongan saja.
+
+## Reels klip kajian
+Menu "Reels" (pengajar) / "Reels Klip" (admin) -> /guru/reels. Unggah video kajian dari HP/komputer, isi judul dan menit.detik (mis. 10.22),
+lalu "Buat Reels". Direkam di peramban (Chrome terbaru menghasilkan MP4). Tanpa SQL tambahan.
+## Tandai selesai
+Peserta yang tercatat HADIR otomatis selesai (materi & rekaman). Sakit/izin/alpa tetap memakai tombol. Klip kajian tidak memakai tombol dan tidak dihitung progres.

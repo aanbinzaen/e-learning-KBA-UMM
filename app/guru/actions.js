@@ -98,7 +98,7 @@ export async function tambahRekaman(pertemuanId, grupId, _prev, fd) {
   if (!judul) return { galat: "Judul rekaman wajib diisi." };
   if (!id) return { galat: "Tautan YouTube tidak dikenali. Salin dari tombol Bagikan di YouTube." };
   const mulai = keDetik(fd.get("mulai")), selesai = keDetik(fd.get("selesai"));
-  if (Number.isNaN(mulai) || Number.isNaN(selesai)) return { galat: "Format waktu tidak dikenali. Contoh: 12:30 atau 1:05:00." };
+  if (Number.isNaN(mulai) || Number.isNaN(selesai)) return { galat: "Format waktu tidak dikenali. Contoh: 12.30 atau 1.05.00." };
   if (selesai != null && selesai <= (mulai ?? 0)) return { galat: "Waktu selesai harus setelah waktu mulai." };
   const baris = { pertemuan_id: pertemuanId, grup_id: grupId, judul, youtube_id: id };
   if (mulai != null) baris.mulai_detik = mulai;

@@ -12,15 +12,21 @@ export default async function Dashboard() {
   let tautan = null, teman = [], persen = 0, total = 0, selesai = 0, absenBuka = 0;
   if (grup) {
     const hitung = (t) => supabase.from(t).select("id", { count: "exact", head: true }).eq("grup_id", grup.id);
-    const [m, r, k, s, ab, tt, tm] = await Promise.all([
-      hitung("materi"), hitung("rekaman"), hitung("kuis").eq("diterbitkan", true),
-      supabase.from("progres").select("item_id", { count: "exact", head: true }).eq("profile_id", user.id).in("jenis", ["materi", "rekaman", "kuis"]),
+    const [m, r, k, s, ab, tt, tm, hd] = await Promise.all([
+      supabase.from("materi").select("id,pertemuan_id").eq("grup_id", grup.id), supabase.from("rekaman").select("id,pertemuan_id,mulai_detik,selesai_detik").eq("grup_id", grup.id), hitung("kuis").eq("diterbitkan", true),
+      supabase.from("progres").select("item_id,jenis").eq("profile_id", user.id).in("jenis", ["materi", "rekaman", "kuis"]),
       supabase.from("pertemuan").select("id", { count: "exact", head: true }).eq("grup_id", grup.id).eq("absensi_buka", true),
       supabase.from("grup_tautan").select("link").eq("grup_id", grup.id).maybeSingle(),
       supabase.rpc("teman_grup"),
+      supabase.from("absensi").select("pertemuan_id").eq("profile_id", user.id).eq("status", "hadir"),
     ]);
     absenBuka = ab.count || 0;
-    total = (m.count || 0) + (r.count || 0) + (k.count || 0); selesai = Math.min(s.count || 0, total);
+    // hadir langsung = materi & rekaman pertemuan itu otomatis selesai
+    const hadirDi = new Set((hd.data || []).map((x) => x.pertemuan_id)), tandai = new Set((s.data || []).map((x) => x.item_id));
+    const bahan = [...(m.data || []), ...(r.data || []).filter((x) => x.mulai_detik == null && x.selesai_detik == null)]; // klip kajian tidak dihitung
+    const selesaiBahan = bahan.filter((x) => tandai.has(x.id) || hadirDi.has(x.pertemuan_id)).length;
+    const selesaiKuis = (s.data || []).filter((x) => x.jenis === "kuis").length;
+    total = bahan.length + (k.count || 0); selesai = Math.min(selesaiBahan + selesaiKuis, total);
     persen = total ? Math.round((selesai / total) * 100) : 0;
     tautan = tt.data?.link;
     teman = tm.data || [];

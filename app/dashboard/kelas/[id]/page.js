@@ -5,6 +5,7 @@ import { tanggalIndo } from "@/lib/data";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import { dariDetik } from "@/lib/youtube";
 import TombolSelesai from "../TombolSelesai";
+import SelesaiOtomatis from "../SelesaiOtomatis";
 
 export const metadata = { title: "Pertemuan" };
 
@@ -13,14 +14,17 @@ export default async function DetailKelas({ params }) {
   const kelola = profil.role !== "peserta";
   const { data: p } = await supabase.from("pertemuan").select("id,grup_id,judul,waktu,keterangan").eq("id", params.id).maybeSingle();
   if (!p) notFound();
-  const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }, { data: kuis }, { data: perc }] = await Promise.all([
+  const [{ data: materi }, { data: rekaman }, { data: selesai }, { data: tautan }, { data: kuis }, { data: perc }, { data: abs }] = await Promise.all([
     supabase.from("materi").select("id,jenis,judul,catatan,file_path").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("rekaman").select("*").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("progres").select("item_id").eq("profile_id", user.id),
     supabase.from("grup_tautan").select("link").eq("grup_id", p.grup_id).maybeSingle(),
     supabase.from("kuis").select("id,judul").eq("pertemuan_id", p.id).eq("diterbitkan", true).order("dibuat_pada"),
     supabase.from("percobaan").select("kuis_id,nilai").eq("profile_id", user.id),
+    supabase.from("absensi").select("status").eq("pertemuan_id", p.id).eq("profile_id", user.id).maybeSingle(),
   ]);
+  // hadir langsung = otomatis selesai; sakit/izin/alpa tetap memakai tombol sebagai tanda sudah menyimak
+  const hadirLangsung = abs?.status === "hadir";
   const terbaik = {}, menunggu = {};
   (perc || []).forEach((x) => {
     if (x.nilai === null) menunggu[x.kuis_id] = true;
@@ -60,7 +64,7 @@ export default async function DetailKelas({ params }) {
             )}
             {m.jenis === "gambar" && <a href={`/dashboard/materi/${m.id}`} target="_blank" rel="noopener noreferrer" className="btn-hijau w-full">Buka gambar ukuran penuh</a>}
             {m.jenis === "pdf" && <a href={`/dashboard/materi/${m.id}`} target="_blank" rel="noopener noreferrer" className="btn-hijau w-full">Buka PDF</a>}
-            <TombolSelesai jenis="materi" itemId={m.id} awal={sudah.has(m.id)} />
+            {hadirLangsung ? <SelesaiOtomatis /> : <TombolSelesai jenis="materi" itemId={m.id} awal={sudah.has(m.id)} />}
           </article>
         ))}
         {!materi?.length && <p className="kartu text-tinta/70">Belum ada materi untuk pertemuan ini.</p>}
@@ -72,7 +76,7 @@ export default async function DetailKelas({ params }) {
           <article key={r.id} className="kartu space-y-3">
             <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />
             <h3 className="font-semibold">{r.judul}{(r.mulai_detik != null || r.selesai_detik != null) && <span className="ml-2 rounded-full bg-kuning/30 px-2 py-0.5 text-xs font-semibold text-hijau-tua">Klip {dariDetik(r.mulai_detik || 0)}{r.selesai_detik != null ? `–${dariDetik(r.selesai_detik)}` : ""}</span>}</h3>
-            <TombolSelesai jenis="rekaman" itemId={r.id} awal={sudah.has(r.id)} />
+            {!(r.mulai_detik != null || r.selesai_detik != null) && (hadirLangsung ? <SelesaiOtomatis /> : <TombolSelesai jenis="rekaman" itemId={r.id} awal={sudah.has(r.id)} />)}
           </article>
         ))}
         {!rekaman?.length && <p className="kartu text-tinta/70">Belum ada rekaman.</p>}

@@ -74,10 +74,10 @@ export default async function DetailPertemuan({ params }) {
           <div><label className="label" htmlFor="jr">Judul rekaman</label><input id="jr" name="judul" className="input" required /></div>
           <div><label className="label" htmlFor="lk">Tautan YouTube</label><input id="lk" name="link" className="input" placeholder="https://youtu.be/…" required /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="label" htmlFor="km">Klip mulai (opsional)</label><input id="km" name="mulai" className="input" placeholder="12:30" inputMode="numeric" /></div>
-            <div><label className="label" htmlFor="ks">Klip selesai (opsional)</label><input id="ks" name="selesai" className="input" placeholder="15:45" inputMode="numeric" /></div>
+            <div><label className="label" htmlFor="km">Klip mulai (opsional)</label><input id="km" name="mulai" className="input" placeholder="10.22" inputMode="numeric" /></div>
+            <div><label className="label" htmlFor="ks">Klip selesai (opsional)</label><input id="ks" name="selesai" className="input" placeholder="15.45" inputMode="numeric" /></div>
           </div>
-          <p className="text-sm text-tinta/70">Kosongkan keduanya untuk rekaman utuh. Isi untuk memotong kajian pendek dari rekaman panjang.</p>
+          <p className="text-sm text-tinta/70">Tulis menit.detik, contoh 10.22 (menit 10 detik ke-22). Kosongkan keduanya untuk rekaman utuh. Isi untuk memotong kajian pendek dari rekaman panjang.</p>
         </FormAksi>
       </Kotak>
 
