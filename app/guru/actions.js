@@ -115,16 +115,6 @@ export async function hapusRekaman(id, pertemuanId) {
   segarkan(pertemuanId);
 }
 
-export async function simpanTautanKelas(grupId, _prev, fd) {
-  const s = await sesiGuru(); if (!s) return TIDAK;
-  const { data, error } = await s.supabase.rpc("atur_tautan_kelas", { gid: grupId, tautan: String(fd.get("link") || "") });
-  if (error) return { galat: "Belum bisa menyimpan. Pastikan SQL 16 sudah dijalankan." };
-  if (data === "dilarang") return TIDAK;
-  if (data === "format") return { galat: "Tautan harus diawali https:// (Zoom, Google Meet, atau WhatsApp)." };
-  revalidatePath("/guru"); revalidatePath("/dashboard");
-  return { ok: "Tautan kelas tersimpan." };
-}
-
 export async function ubahAbsensiBuka(pertemuanId, buka) {
   const s = await sesiGuru(); if (!s) return;
   await s.supabase.from("pertemuan").update({ absensi_buka: buka }).eq("id", pertemuanId);

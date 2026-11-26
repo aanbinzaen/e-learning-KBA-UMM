@@ -24,10 +24,3 @@ Menu "Reels" (pengajar) / "Reels Klip" (admin) -> /guru/reels. Unggah video kaji
 lalu "Buat Reels". Direkam di peramban (Chrome terbaru menghasilkan MP4). Tanpa SQL tambahan.
 ## Tandai selesai
 Peserta yang tercatat HADIR otomatis selesai (materi & rekaman). Sakit/izin/alpa tetap memakai tombol. Klip kajian tidak memakai tombol dan tidak dihitung progres.
-
-## Login, lupa sandi, beranda (SQL 16)
-Jalankan sekali: `supabase/16_gabung_kelas_tautan_guru.sql` (fungsi gabung_kelas & atur_tautan_kelas).
-- Login: tab Peserta/Pengajar/Admin mengisi awalan BISMILLAH- / PGJ- / ADMIN-; cukup ketik angka. Awalan lama KBUMM- tetap dikenali.
-- Lupa sandi: pilih kelas -> WhatsApp ke Ustadz Satria (Abul Aswad, Kisai) atau Ustadz Syahrul (Khalil, Ibnu Hisyam, Sibawaih). Ubah nomor di lib/adminKelas.js.
-- Peserta: Gabung Kelas (hadir otomatis 30 menit sebelum s.d. 3 jam sesudah jam pertemuan), absen mandiri, kuis, rekaman di beranda.
-- Pengajar: link kelas & absensi di atas halaman Kelola Kelas. Admin: pintasan di Beranda Admin. Setelah login, admin/pengajar langsung ke berandanya.

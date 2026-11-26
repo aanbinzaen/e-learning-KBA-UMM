@@ -3,7 +3,7 @@ import { wajibAdmin } from "@/lib/auth";
 
 export const metadata = { title: "Admin", robots: { index: false } };
 const NAV = [
-  ["/admin", "Beranda"], ["/admin/peserta", "Peserta"], ["/admin/impor", "Impor"],
+  ["/admin", "Ringkasan"], ["/admin/peserta", "Peserta"], ["/admin/impor", "Impor"],
   ["/admin/grup", "Kelas & Grup"], ["/admin/kredensial", "Kode & Password"], ["/admin/rekap", "Rekap Absensi"], ["/guru/laporan", "Laporan & Rapor"], ["/admin/profil", "Profil Publik"], ["/guru/pengumuman", "Pengumuman & Flyer"], ["/guru/reels", "Reels Klip"], ["/admin/notifikasi", "Notifikasi"], ["/admin/staf", "Akun Master"], ["/admin/beranda", "Tampilan Beranda"], ["/admin/faidah", "Faidah"], ["/admin/konten", "Konten"],
 ];
 

@@ -103,7 +103,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       awal = mulaiDt ?? 0; akhir = selesaiDt ?? Math.min(v.duration, awal + 60);
       if (akhir > v.duration) akhir = v.duration;
       if (akhir <= awal) return setGalat("Waktu selesai harus setelah waktu mulai.");
-      if (akhir - awal > 180) return setGalat("Reels maksimal 3 menit. Perpendek klipnya.");
+      if (akhir - awal > 210) return setGalat("Reels maksimal 3 menit 30 detik. Perpendek klipnya.");
     } else if (!isi.trim()) return setGalat("Tulis isi teks reels, atau pilih mode video.");
 
     setSibuk(true); setStatus("Merekam… jangan tutup atau pindah halaman.");
@@ -127,7 +127,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         tujuan.stream.getAudioTracks().forEach((a) => alur.addTrack(a));
       }
       if (v) { v.currentTime = awal; await new Promise((ok) => { const f = () => { v.removeEventListener("seeked", f); ok(); }; v.addEventListener("seeked", f); }); }
-      const rec = new MediaRecorder(alur, { mimeType: format.mime, videoBitsPerSecond: hd ? 6_000_000 : 3_500_000 });
+      const rec = new MediaRecorder(alur, { mimeType: format.mime, videoBitsPerSecond: dur > 120 ? (hd ? 4_000_000 : 2_200_000) : (hd ? 6_000_000 : 3_500_000) });
       const potong = []; rec.ondataavailable = (e) => e.data.size && potong.push(e.data);
       const selesaiRekam = new Promise((ok) => { rec.onstop = ok; });
       const st = { judul, pemateri, kelas, isi, video: v, label: mode === "video" ? labelPotongan(ke, dariDetik(awal), dariDetik(akhir)) : "" };
