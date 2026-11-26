@@ -26,3 +26,6 @@ riwayat kehadiran per pertemuan, dan catatan pengajar. Dapat disaring per period
 - **Gambar PNG/JPG** (rapor dan laporan; opsi HD 2×), **Word**, **Excel**, serta **PDF A4**. PDF dan gambar PNG/JPG dibuat per halaman A4: isi yang tidak muat mengalir ke halaman berikutnya (kepala lanjutan + nomor halaman). Gambar lebih dari satu halaman diunduh sebagai zip. Guru juga dapat mengunduh satu PDF berisi rapor semua peserta grup.
 - Rapor satu grup sekaligus: Word (satu halaman per peserta) dan Excel (rekap, matriks kehadiran, matriks nilai kuis).
 - Laporan umum: opsi menyembunyikan nama peserta (untuk laporan anonim).
+
+## Sampul
+Rapor dan laporan memiliki halaman sampul (nama peserta pada rapor) di gambar PNG/JPG, PDF, dan Word. Kotak centang "Sertakan sampul" mematikannya. Excel tidak memakai sampul.

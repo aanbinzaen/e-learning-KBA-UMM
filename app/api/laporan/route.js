@@ -20,6 +20,6 @@ export async function GET(request) {
   if (!grup.length) return new Response("Tidak ada grup untuk dilaporkan.", { status: 404 });
   const lap = await muatLaporan(s.supabase, grup, rentang, bobot);
   lap.bobot = bobot;
-  const buf = format === "xlsx" ? await buatExcelLaporan(lap, { tampilNama }) : await buatDokLaporan(lap, { tampilNama });
+  const buf = format === "xlsx" ? await buatExcelLaporan(lap, { tampilNama }) : await buatDokLaporan(lap, { tampilNama, sampul: sp.sampul !== "0" });
   return new Response(buf, { headers: { "Content-Type": TIPE[format], "Content-Disposition": `attachment; filename="laporan-kba-umm.${format}"`, "Cache-Control": "no-store" } });
 }

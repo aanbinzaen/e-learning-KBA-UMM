@@ -34,6 +34,6 @@ export async function GET(request) {
   if (!daftar.length) return new Response("Data rapor tidak ditemukan.", { status: 404 });
 
   if (format === "json") return Response.json({ nama, daftar }, { headers: { "Cache-Control": "no-store" } });
-  const buf = format === "xlsx" ? await buatExcelRapor(daftar) : await buatDokRapor(daftar);
+  const buf = format === "xlsx" ? await buatExcelRapor(daftar) : await buatDokRapor(daftar, { sampul: sp.sampul !== "0" });
   return new Response(buf, { headers: { "Content-Type": TIPE[format], "Content-Disposition": `attachment; filename="${nama}.${format}"`, "Cache-Control": "no-store" } });
 }

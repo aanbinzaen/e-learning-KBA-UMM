@@ -4,6 +4,7 @@ import { useState } from "react";
 // Tombol unduh: PDF A4 dan gambar PNG/JPG per halaman A4 (digambar di peramban), Word dan Excel (dibuat server).
 export default function UnduhRapor({ jenis = "rapor", data, namaBerkas = "rapor", hrefDasar, bisaSembunyikanNama = false }) {
   const [sibuk, setSibuk] = useState("");
+  const [sampul, setSampul] = useState(true);
   const [galat, setGalat] = useState("");
   const [nama, setNama] = useState(true);
   const [hd, setHd] = useState(false);
@@ -18,7 +19,7 @@ export default function UnduhRapor({ jenis = "rapor", data, namaBerkas = "rapor"
   // Halaman A4: satu halaman jadi satu berkas; lebih dari satu halaman dikemas dalam zip.
   async function buatHalaman() {
     const m = await import("@/lib/gambarRapor");
-    const op = { piksel: hd ? 2 : 1 };
+    const op = { piksel: hd ? 2 : 1, sampul };
     return jenis === "rapor" ? m.gambarRapor(data, op) : m.gambarLaporan(data, { tampilNama: nama, ...op });
   }
   async function gambar(format) {
@@ -42,7 +43,7 @@ export default function UnduhRapor({ jenis = "rapor", data, namaBerkas = "rapor"
     } catch { setGalat("PDF gagal dibuat. Coba matikan opsi HD, atau gunakan komputer."); }
     setSibuk("");
   }
-  const href = (f) => `${hrefDasar}${hrefDasar.includes("?") ? "&" : "?"}format=${f}${jenis === "laporan" ? `&nama=${nama ? 1 : 0}` : ""}`;
+  const href = (f) => `${hrefDasar}${hrefDasar.includes("?") ? "&" : "?"}format=${f}${f === "docx" && !sampul ? "&sampul=0" : ""}${jenis === "laporan" ? `&nama=${nama ? 1 : 0}` : ""}`;
   const tombol = "btn !min-h-[46px] !px-5 text-sm border-2 border-hijau text-hijau hover:bg-hijau-muda";
 
   return (
@@ -56,6 +57,7 @@ export default function UnduhRapor({ jenis = "rapor", data, namaBerkas = "rapor"
         <a href={href("xlsx")} className={tombol}>Excel (.xlsx)</a>
       </div>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <label className="flex items-center gap-2"><input type="checkbox" checked={sampul} onChange={(e) => setSampul(e.target.checked)} className="h-5 w-5 accent-[#1E7B34]" /> Sertakan sampul</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={hd} onChange={(e) => setHd(e.target.checked)} className="h-5 w-5 accent-[#1E7B34]" /> Kualitas HD (2×, berkas lebih besar)</label>
         {bisaSembunyikanNama && <label className="flex items-center gap-2"><input type="checkbox" checked={nama} onChange={(e) => setNama(e.target.checked)} className="h-5 w-5 accent-[#1E7B34]" /> Sertakan nama peserta</label>}
       </div>
