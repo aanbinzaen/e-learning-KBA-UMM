@@ -111,7 +111,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
     const k = document.createElement("canvas"); k.width = hd ? 1080 : 720; k.height = hd ? 1920 : 1280;
     const ctx = k.getContext("2d");
     const dur = akhir - awal, aset = asetRef.current || await siapkanReels();
-    let ac = null, lagu = null, gainLagu = null;
+    let ac = null, lagu = null, gainLagu = null, kunciLayar = null, bersihTampak = () => {};
     try {
       const alur = k.captureStream(30);
       const v = mode === "video" ? videoRef.current : null;
@@ -134,25 +134,44 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       const selesaiRekam = new Promise((ok) => { rec.onstop = ok; });
       const st = { judul, pemateri, kelas, isi, video: v, label: mode === "video" ? labelPotongan(ke, dariDetik(awal), dariDetik(akhir)) : "" };
       rec.start(500);
+      // Layar dijaga tetap menyala; bila halaman sempat tersembunyi (ganti aplikasi/layar mati), rekaman dan video dijeda
+      // agar tidak ada bagian beku yang membuat WhatsApp menolak berkas.
+      try { kunciLayar = await navigator.wakeLock?.request("screen"); } catch { /* tidak didukung */ }
+      let macet = false, tersembunyi = false;
+      const ubahTampak = () => {
+        if (document.hidden) {
+          tersembunyi = true;
+          if (rec.state === "recording") rec.pause();
+          if (v) v.pause(); if (lagu) lagu.pause();
+        } else if (tersembunyi) {
+          tersembunyi = false;
+          if (v && v.readyState < 3) macet = true; // biarkan loop yang melanjutkan setelah data siap
+          else if (rec.state === "paused") rec.resume();
+          if (v) v.play().catch(() => {}); if (lagu) lagu.play().catch(() => {});
+        }
+      };
+      document.addEventListener("visibilitychange", ubahTampak);
+      bersihTampak = () => document.removeEventListener("visibilitychange", ubahTampak);
       const t0 = performance.now();
       if (efek) bunyiWhoosh(ac, tujuan, { naik: true, volume: 0.45 });
       if (v) await v.play();
       if (lagu) await lagu.play();
       await new Promise((ok) => {
-        let macet = false;
+        let tMaya = 0, terakhir = performance.now();
         const loop = () => {
-          const wall = (performance.now() - t0) / 1000;
-          const t = v ? v.currentTime - awal : wall;
+          const kini = performance.now(); tMaya += Math.min(0.1, (kini - terakhir) / 1000); terakhir = kini; // waktu hanya berjalan saat bingkai tergambar
+          const wall = (kini - t0) / 1000;
+          const t = v ? v.currentTime - awal : tMaya;
           // video tersendat (memuat/decode): jeda perekam agar waktu macet tidak ikut terekam & durasi tetap sesuai
           if (v) {
             const tersendat = v.readyState < 3 && !v.ended;
             if (tersendat && !macet && rec.state === "recording") { rec.pause(); macet = true; if (lagu) lagu.pause(); }
-            else if (!tersendat && macet && rec.state === "paused") { rec.resume(); macet = false; if (lagu) lagu.play().catch(() => {}); }
+            else if (!tersendat && macet && rec.state === "paused" && !document.hidden) { rec.resume(); macet = false; if (lagu) lagu.play().catch(() => {}); }
           }
           gambarReels(ctx, st, aset, Math.max(0, t), dur);
           // backsound lirih: masuk perlahan, keluar perlahan di akhir
           if (gainLagu) gainLagu.gain.value = (volMusik / 100) * Math.max(0, Math.min(1, t / 1.2, (dur - t) / 1.5));
-          if (t >= dur - 0.02 || (v && v.ended) || wall > dur * 2 + 30) return ok();
+          if (t >= dur - 0.02 || (v && v.ended) || wall > dur * 3 + 60) return ok();
           setStatus(`Merekam… ${Math.min(100, Math.round((t / dur) * 100))}%`);
           requestAnimationFrame(loop);
         };
@@ -164,8 +183,8 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         if (gainLagu) gainLagu.gain.value = 0;
         bunyiWhoosh(ac, tujuan, { naik: false, volume: 0.45, durasi: 0.9 });
         await new Promise((ok) => {
-          const tp = performance.now();
-          const loopP = () => { const x = (performance.now() - tp) / 1000; gambarPenutup(ctx, aset, x); if (x >= DURASI_PENUTUP) return ok(); setStatus("Menambah penutup…"); requestAnimationFrame(loopP); };
+          let x = 0, tl = performance.now();
+          const loopP = () => { const n2 = performance.now(); x += Math.min(0.1, (n2 - tl) / 1000); tl = n2; gambarPenutup(ctx, aset, x); if (x >= DURASI_PENUTUP) return ok(); setStatus("Menambah penutup…"); requestAnimationFrame(loopP); };
           loopP();
         });
       }
@@ -183,7 +202,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
     } catch (e) {
       setGalat("Perekaman gagal: " + (e?.message || "coba lagi dengan Chrome terbaru."));
       setStatus("");
-    } finally { setSibuk(false); if (lagu) { lagu.pause(); URL.revokeObjectURL(lagu.src); } if (ac) ac.close().catch(() => {}); }
+    } finally { bersihTampak(); try { kunciLayar?.release(); } catch { /* abaikan */ } setSibuk(false); if (lagu) { lagu.pause(); URL.revokeObjectURL(lagu.src); } if (ac) ac.close().catch(() => {}); }
   }
 
   const nama = `reels-kba-umm-${judul.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "klip"}.${hasil?.ext || "mp4"}`;
