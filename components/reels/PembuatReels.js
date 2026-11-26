@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { W, H, siapkanReels, gambarReels, pilihFormatRekam } from "@/lib/reels";
 import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
 import BingkaiYouTube from "./BingkaiYouTube";
+import { jadikanProgresif } from "@/lib/mp4Lurus";
 
 const labelPotongan = (ke, a, b) => `Potongan Rekaman${ke ? ` Pertemuan ke-${ke}` : ""}${a ? ` · ${a}${b ? `–${b}` : ""}` : ""}`;
 const tombolGaris = "btn !min-h-[46px] !px-4 border-2 border-hijau/30 text-sm text-hijau hover:bg-hijau-muda disabled:opacity-60";
@@ -129,7 +130,12 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       if (lagu) lagu.pause();
       await new Promise((r) => setTimeout(r, 300));
       rec.stop(); await selesaiRekam;
-      const blob = new Blob(potong, { type: format.mime.split(";")[0] });
+      let blob = new Blob(potong, { type: format.mime.split(";")[0] });
+      if (format.ext === "mp4") {
+        // MP4 hasil perekam bertipe "terpecah": galeri memutar penuh, tetapi WhatsApp hanya membaca ± 3 detik pertama.
+        // Ditata ulang menjadi MP4 biasa dengan durasi lengkap (tanpa menyandi ulang).
+        try { const lurus = jadikanProgresif(new Uint8Array(await blob.arrayBuffer())); if (lurus) blob = new Blob([lurus], { type: "video/mp4" }); } catch { /* pakai hasil asli */ }
+      }
       setHasil({ url: URL.createObjectURL(blob), ext: format.ext, blob });
       setStatus("Selesai. Reels siap diunduh.");
     } catch (e) {
