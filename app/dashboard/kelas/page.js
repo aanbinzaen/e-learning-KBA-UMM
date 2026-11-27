@@ -14,7 +14,7 @@ export default async function KelasSaya({ searchParams }) {
     const semuaGrup = await grupDiampu(supabase, profil);
     const aktif = semuaGrup.find((g) => g.id === searchParams?.grup) || semuaGrup[0];
     if (!aktif) return <p className="kartu">Belum ada grup yang bisa dibuka.</p>;
-    const { data: daftarGrup } = await supabase.from("pertemuan").select("id,judul,waktu,absensi_buka,materi(id),rekaman(id,mulai_detik,selesai_detik),kuis(id)").eq("grup_id", aktif.id).order("waktu", { ascending: false });
+    const { data: daftarGrup } = await supabase.from("pertemuan").select("id,judul,waktu,absensi_buka,materi(id),rekaman(id,mulai_detik,selesai_detik,video_path),kuis(id)").eq("grup_id", aktif.id).order("waktu", { ascending: false });
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-hijau-tua">Lihat kelas</h1>
@@ -48,7 +48,7 @@ export default async function KelasSaya({ searchParams }) {
       <h1 className="text-2xl font-bold text-hijau-tua">Kelas saya</h1>
       <p className="text-tinta/80">{pg.grup?.nama}</p>
       {(daftar || []).map((p) => {
-        const rekamanUtuh = p.rekaman.filter((x) => x.mulai_detik == null && x.selesai_detik == null); // klip kajian tanpa tanda selesai
+        const rekamanUtuh = p.rekaman.filter((x) => x.mulai_detik == null && x.selesai_detik == null && !x.video_path); // klip kajian tanpa tanda selesai
         const item = [...p.materi, ...rekamanUtuh, ...p.kuis.filter((x) => x.id)];
         const otomatis = hadirDi.has(p.id) ? new Set([...p.materi, ...rekamanUtuh].map((x) => x.id)) : new Set();
         const n = item.filter((x) => sudah.has(x.id) || otomatis.has(x.id)).length;

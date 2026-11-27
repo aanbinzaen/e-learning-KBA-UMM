@@ -4,6 +4,8 @@ import { W, H, siapkanReels, gambarReels, gambarPenutup, bunyiWhoosh, muatWhoosh
 import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
 import BingkaiYouTube from "./BingkaiYouTube";
 import { jadikanProgresif } from "@/lib/mp4Lurus";
+import { supabaseBrowser } from "@/lib/supabase/client";
+import { simpanVideoPendek } from "@/app/guru/actions";
 
 const labelPotongan = (ke, a, b) => `Potongan Rekaman${ke ? ` Pertemuan ke-${ke}` : ""}${a ? ` · ${a}${b ? `–${b}` : ""}` : ""}`;
 function susunCaption({ judul, pemateri, kelas, ke, isi, mode, idYt, mulai, host }) {
@@ -21,7 +23,10 @@ function susunCaption({ judul, pemateri, kelas, ke, isi, mode, idYt, mulai, host
 }
 const tombolGaris = "btn !min-h-[46px] !px-4 border-2 border-hijau/30 text-sm text-hijau hover:bg-hijau-muda disabled:opacity-60";
 
-export default function PembuatReels({ pengajar = "", rekaman = [] }) {
+export default function PembuatReels({ pengajar = "", rekaman = [], daftarPertemuan = [] }) {
+  const [tujuan, setTujuan] = useState("");
+  const [simpanOto, setSimpanOto] = useState(true);
+  const [infoSimpan, setInfoSimpan] = useState(null);
   const [tautan, setTautan] = useState("");
   const [bingkai, setBingkai] = useState(false);
   const [subYt, setSubYt] = useState(true);
@@ -93,7 +98,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
   }
 
   async function buat() {
-    setGalat(""); setHasil(null);
+    setGalat(""); setHasil(null); setInfoSimpan(null);
     if (!format) return setGalat("Peramban ini belum mendukung perekaman video. Gunakan Chrome terbaru di HP atau komputer.");
     if (!judul.trim()) return setGalat("Judul wajib diisi.");
     let awal = 0, akhir = durasiKartu;
@@ -130,7 +135,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         tujuan.stream.getAudioTracks().forEach((a) => alur.addTrack(a));
       }
       if (v) { v.currentTime = awal; await new Promise((ok) => { const f = () => { v.removeEventListener("seeked", f); ok(); }; v.addEventListener("seeked", f); }); }
-      const rec = new MediaRecorder(alur, { mimeType: format.mime, videoBitsPerSecond: dur > 120 ? (hd ? 4_000_000 : 2_200_000) : (hd ? 6_000_000 : 3_500_000) });
+      const rec = new MediaRecorder(alur, { mimeType: format.mime, videoBitsPerSecond: Math.max(600_000, Math.min(hd ? 6_000_000 : 3_500_000, Math.floor((45e6 * 8) / (dur + 3.4) - 160_000))) }); // berkas ≤ ± 45 MB agar muat di gudang berkas
       const potong = []; rec.ondataavailable = (e) => e.data.size && potong.push(e.data);
       const selesaiRekam = new Promise((ok) => { rec.onstop = ok; });
       const st = { judul, pemateri, kelas, isi, video: v, label: mode === "video" ? labelPotongan(ke, dariDetik(awal), dariDetik(akhir)) : "" };
@@ -192,6 +197,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         try { const lurus = jadikanProgresif(new Uint8Array(await blob.arrayBuffer())); if (lurus) blob = new Blob([lurus], { type: "video/mp4" }); } catch { /* pakai hasil asli */ }
       }
       setHasil({ url: URL.createObjectURL(blob), ext: format.ext, blob });
+      if (simpanOto && tujuan) simpanKeRekaman(blob, format.ext);
       setStatus("Selesai. Reels siap diunduh.");
     } catch (e) {
       setGalat("Perekaman gagal: " + (e?.message || "coba lagi dengan Chrome terbaru."));
@@ -200,6 +206,17 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
   }
 
   const nama = `reels-kba-umm-${judul.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "klip"}.${hasil?.ext || "mp4"}`;
+  async function simpanKeRekaman(blob, ext) {
+    const t = daftarPertemuan.find((x) => x.id === tujuan);
+    if (!t) return setInfoSimpan({ galat: "Pilih pertemuan tujuan dulu." });
+    if (blob.size > 50 * 1024 * 1024) return setInfoSimpan({ galat: `Video ${Math.round(blob.size / 1048576)} MB, melebihi batas 50 MB gudang berkas. Perpendek klip atau matikan mode HD.` });
+    setInfoSimpan({ proses: true });
+    const path = `${t.grup_id}/${crypto.randomUUID()}.${ext === "webm" ? "webm" : "mp4"}`;
+    const { error } = await supabaseBrowser().storage.from("video-pendek").upload(path, blob, { contentType: ext === "webm" ? "video/webm" : "video/mp4" });
+    if (error) return setInfoSimpan({ galat: "Gagal mengunggah ke gudang berkas. Pastikan SQL 17 sudah dijalankan dan Anda pengampu kelas ini." });
+    const r = await simpanVideoPendek(t.id, t.grup_id, judul, path);
+    setInfoSimpan(r);
+  }
   async function bagikan() {
     const f = new File([hasil.blob], nama, { type: hasil.blob.type });
     if (navigator.canShare?.({ files: [f] })) { try { await navigator.share({ files: [f], title: judul, text: caption }); } catch { /* dibatalkan */ } }
@@ -229,7 +246,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
               <p className="font-medium text-hijau-tua">Langkah 1 · Cari menit di rekaman YouTube</p>
               {rekaman.length > 0 && (
                 <div><label className="label" htmlFor="rr">Pilih dari rekaman kelas</label>
-                  <select id="rr" className="input" value="" onChange={(e) => { if (e.target.value) { setTautan(`https://youtu.be/${e.target.value}`); const r = rekaman.find((x) => x.youtube_id === e.target.value); if (r) { const m = r.pertemuan.match(/pertemuan\s*(?:ke)?[-\s]*(\d+)/i) || r.judul.match(/pertemuan\s*(?:ke)?[-\s]*(\d+)/i); if (m) setKe(m[1]); if (!judulDiubah.current) setJudul(r.judul); } } }}>
+                  <select id="rr" className="input" value="" onChange={(e) => { if (e.target.value) { setTautan(`https://youtu.be/${e.target.value}`); const r = rekaman.find((x) => x.youtube_id === e.target.value); if (r?.pertemuan_id) setTujuan(r.pertemuan_id); if (r) { const m = r.pertemuan.match(/pertemuan\s*(?:ke)?[-\s]*(\d+)/i) || r.judul.match(/pertemuan\s*(?:ke)?[-\s]*(\d+)/i); if (m) setKe(m[1]); if (!judulDiubah.current) setJudul(r.judul); } } }}>
                     <option value="">— pilih rekaman —</option>
                     {rekaman.map((r) => <option key={r.id} value={r.youtube_id}>{r.pertemuan ? `${r.pertemuan} · ` : ""}{r.judul}</option>)}
                   </select>
@@ -285,11 +302,29 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={efek} onChange={(e) => setEfek(e.target.checked)} /> Efek suara whoosh di awal dan akhir + penutup logo Rumah Dakwah &amp; Pesantren Online</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={hd} onChange={(e) => setHd(e.target.checked)} /> Kualitas HD 1080×1920 (lebih berat; bawaan 720×1280 sudah cukup untuk Reels/Status)</label>
 
+        {daftarPertemuan.length > 0 && (
+          <div className="space-y-2 rounded-2xl border-2 border-hijau/15 p-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-hijau-tua"><input type="checkbox" checked={simpanOto} onChange={(e) => setSimpanOto(e.target.checked)} /> Simpan otomatis ke kumpulan rekaman (nama: Video Pendek)</label>
+            {simpanOto && (
+              <div><label className="label" htmlFor="rtj">Masuk ke pertemuan</label>
+                <select id="rtj" className="input" value={tujuan} onChange={(e) => setTujuan(e.target.value)}>
+                  <option value="">— pilih pertemuan —</option>
+                  {daftarPertemuan.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+                </select>
+                <p className="mt-1 text-sm text-tinta/70">Peserta kelas itu bisa langsung menontonnya di halaman Rekaman. Batas 50 MB per video.</p>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={buat} disabled={sibuk} className="btn-hijau !min-h-[46px] disabled:opacity-60">{sibuk ? "Merekam…" : "Buat Reels"}</button>
           {hasil && <a href={hasil.url} download={nama} className="btn-kuning !min-h-[46px]">Unduh {hasil.ext.toUpperCase()}</a>}
           {hasil && <button type="button" onClick={bagikan} className={tombolGaris}>Bagikan…</button>}
+          {hasil && tujuan && !infoSimpan?.ok && !infoSimpan?.proses && <button type="button" onClick={() => simpanKeRekaman(hasil.blob, hasil.ext)} className={tombolGaris}>Simpan ke rekaman</button>}
         </div>
+        {infoSimpan?.proses && <p className="text-sm text-hijau" role="status">Menyimpan ke kumpulan rekaman…</p>}
+        {infoSimpan?.ok && <p className="rounded-2xl bg-hijau-muda px-4 py-3 text-sm text-hijau-tua" role="status">{infoSimpan.ok}</p>}
+        {infoSimpan?.galat && <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{infoSimpan.galat}</p>}
         {status && <p className="text-sm text-hijau" role="status">{status}</p>}
         {galat && <p className="text-sm font-medium text-red-700" role="alert">{galat}</p>}
         <div className="space-y-2 rounded-2xl border-2 border-hijau/15 p-4">

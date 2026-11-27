@@ -1,3 +1,5 @@
+import VideoPendek from "@/components/VideoPendek";
+import { urlVideoPendek } from "@/lib/videoPendek";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ambilSesi } from "@/lib/auth";
@@ -32,6 +34,7 @@ export default async function DetailKelas({ params }) {
   });
   const sudah = new Set((selesai || []).map((x) => x.item_id));
   // tautan sementara (1 jam) agar gambar materi tampil langsung di halaman
+  const urlVideo = await urlVideoPendek(supabase, rekaman);
   const gambarUrl = {};
   const daftarGambar = (materi || []).filter((m) => m.jenis === "gambar" && m.file_path);
   if (daftarGambar.length) {
@@ -74,9 +77,9 @@ export default async function DetailKelas({ params }) {
         <h2 className="text-lg font-semibold text-hijau-tua">Rekaman</h2>
         {(rekaman || []).map((r) => (
           <article key={r.id} className="kartu space-y-3">
-            <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />
+            {r.video_path ? <VideoPendek url={urlVideo[r.id]} judul={r.judul} /> : <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />}
             <h3 className="font-semibold">{r.judul}{(r.mulai_detik != null || r.selesai_detik != null) && <span className="ml-2 rounded-full bg-kuning/30 px-2 py-0.5 text-xs font-semibold text-hijau-tua">Klip {dariDetik(r.mulai_detik || 0)}{r.selesai_detik != null ? `–${dariDetik(r.selesai_detik)}` : ""}</span>}</h3>
-            {!(r.mulai_detik != null || r.selesai_detik != null) && (hadirLangsung ? <SelesaiOtomatis /> : <TombolSelesai jenis="rekaman" itemId={r.id} awal={sudah.has(r.id)} />)}
+            {!(r.video_path || r.mulai_detik != null || r.selesai_detik != null) && (hadirLangsung ? <SelesaiOtomatis /> : <TombolSelesai jenis="rekaman" itemId={r.id} awal={sudah.has(r.id)} />)}
           </article>
         ))}
         {!rekaman?.length && <p className="kartu text-tinta/70">Belum ada rekaman.</p>}

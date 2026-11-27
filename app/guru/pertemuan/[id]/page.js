@@ -1,3 +1,5 @@
+import VideoPendek from "@/components/VideoPendek";
+import { urlVideoPendek } from "@/lib/videoPendek";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { wajibGuru } from "@/lib/guru";
@@ -19,6 +21,7 @@ export default async function DetailPertemuan({ params }) {
     supabase.from("rekaman").select("*").eq("pertemuan_id", p.id).order("dibuat_pada"),
     supabase.from("kuis").select("id,judul,diterbitkan").eq("pertemuan_id", p.id).order("dibuat_pada"),
   ]);
+  const urlVideo = await urlVideoPendek(supabase, rekaman);
   const Kotak = ({ judul, children }) => <section className="kartu space-y-3"><h2 className="text-lg font-semibold text-hijau">{judul}</h2>{children}</section>;
 
   return (
@@ -66,7 +69,7 @@ export default async function DetailPertemuan({ params }) {
       <Kotak judul={`Rekaman YouTube (${rekaman?.length || 0})`}>
         {(rekaman || []).map((r) => (
           <div key={r.id} className="space-y-2">
-            <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />
+            {r.video_path ? <VideoPendek url={urlVideo[r.id]} judul={r.judul} /> : <YouTubePlayer id={r.youtube_id} judul={r.judul} mulai={r.mulai_detik} selesai={r.selesai_detik} />}
             <div className="flex items-center justify-between gap-2"><p className="font-medium">{r.judul}{(r.mulai_detik != null || r.selesai_detik != null) && <span className="ml-2 rounded-full bg-kuning/30 px-2 py-0.5 text-xs font-semibold text-hijau-tua">Klip {dariDetik(r.mulai_detik || 0)}{r.selesai_detik != null ? `–${dariDetik(r.selesai_detik)}` : ""}</span>}</p><TombolHapus aksi={hapusRekaman.bind(null, r.id, p.id)} pesan="Hapus rekaman ini?" /></div>
           </div>
         ))}

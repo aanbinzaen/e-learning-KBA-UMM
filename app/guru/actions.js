@@ -109,9 +109,22 @@ export async function tambahRekaman(pertemuanId, grupId, _prev, fd) {
   return { ok: mulai != null || selesai != null ? "Klip kajian ditambahkan." : "Rekaman ditambahkan." };
 }
 
+export async function simpanVideoPendek(pertemuanId, grupId, judul, path) {
+  const s = await sesiGuru(); if (!s) return TIDAK;
+  const j = bersih(judul);
+  if (!j) return { galat: "Judul wajib diisi." };
+  if (!String(path || "").startsWith(`${grupId}/`)) return TIDAK;
+  const { error } = await s.supabase.from("rekaman").insert({ pertemuan_id: pertemuanId, grup_id: grupId, judul: `Video Pendek: ${j}`.slice(0, 160), video_path: path });
+  if (error) return { galat: "Belum bisa menyimpan ke rekaman. Pastikan SQL 17 sudah dijalankan dan Anda pengampu grup ini." };
+  segarkan(pertemuanId); revalidatePath("/dashboard");
+  return { ok: "Tersimpan di kumpulan rekaman sebagai Video Pendek." };
+}
+
 export async function hapusRekaman(id, pertemuanId) {
   const s = await sesiGuru(); if (!s) return;
+  const { data: r } = await s.supabase.from("rekaman").select("video_path").eq("id", id).maybeSingle();
   await s.supabase.from("rekaman").delete().eq("id", id);
+  if (r?.video_path) await s.supabase.storage.from("video-pendek").remove([r.video_path]);
   segarkan(pertemuanId);
 }
 
