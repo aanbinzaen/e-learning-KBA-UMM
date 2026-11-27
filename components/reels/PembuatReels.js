@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { W, H, siapkanReels, gambarReels, gambarPenutup, bunyiWhoosh, DURASI_PENUTUP, pilihFormatRekam } from "@/lib/reels";
+import { W, H, siapkanReels, gambarReels, gambarPenutup, bunyiWhoosh, muatWhoosh, bunyiBerkas, DURASI_PENUTUP, pilihFormatRekam } from "@/lib/reels";
 import { keDetik, dariDetik, idYouTube } from "@/lib/youtube";
 import BingkaiYouTube from "./BingkaiYouTube";
 import { jadikanProgresif } from "@/lib/mp4Lurus";
@@ -111,7 +111,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
     const k = document.createElement("canvas"); k.width = hd ? 1080 : 720; k.height = hd ? 1920 : 1280;
     const ctx = k.getContext("2d");
     const dur = akhir - awal, aset = asetRef.current || await siapkanReels();
-    let ac = null, lagu = null, gainLagu = null, kunciLayar = null, bersihTampak = () => {};
+    let ac = null, bufWhoosh = null, lagu = null, gainLagu = null, kunciLayar = null, bersihTampak = () => {};
     try {
       const alur = k.captureStream(30);
       const v = mode === "video" ? videoRef.current : null;
@@ -119,6 +119,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       {
         ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
         tujuan = ac.createMediaStreamDestination();
+        if (efek) bufWhoosh = await muatWhoosh(ac);
         if (v) ac.createMediaElementSource(v).connect(tujuan);
         if (musik) {
           lagu = new Audio(); lagu.src = URL.createObjectURL(musik); lagu.loop = true; lagu.preload = "auto";
@@ -152,7 +153,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       document.addEventListener("visibilitychange", ubahTampak);
       bersihTampak = () => document.removeEventListener("visibilitychange", ubahTampak);
       const t0 = performance.now();
-      if (efek) bunyiWhoosh(ac, tujuan, { naik: true, volume: 0.45 });
+      if (efek) { if (bufWhoosh) bunyiBerkas(ac, tujuan, bufWhoosh); else bunyiWhoosh(ac, tujuan, { naik: true, volume: 0.45 }); }
       if (v) await v.play();
       if (lagu) await lagu.play();
       await new Promise((ok) => {
@@ -174,7 +175,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       // penutup: logo Rumah Dakwah dan Pesantren Online, dengan efek whoosh di awalnya
       if (efek) {
         if (gainLagu) gainLagu.gain.value = 0;
-        bunyiWhoosh(ac, tujuan, { naik: false, volume: 0.45, durasi: 0.9 });
+        if (bufWhoosh) bunyiBerkas(ac, tujuan, bufWhoosh); else bunyiWhoosh(ac, tujuan, { naik: false, volume: 0.45, durasi: 0.9 });
         await new Promise((ok) => {
           let x = 0, tl = performance.now();
           const loopP = () => { const n2 = performance.now(); x += Math.min(0.1, (n2 - tl) / 1000); tl = n2; gambarPenutup(ctx, aset, x); if (x >= DURASI_PENUTUP) return ok(); setStatus("Menambah penutup…"); requestAnimationFrame(loopP); };
