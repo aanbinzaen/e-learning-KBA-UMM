@@ -4,7 +4,8 @@ import { dariDetik } from "@/lib/youtube";
 
 // Layar penuh 9:16: rekaman YouTube otomatis terpotong (mulai–selesai) dan tampil di dalam bingkai KBA-UMM.
 // Cocok untuk direkam dengan fitur rekam layar HP (suara ikut terekam).
-export default function BingkaiYouTube({ id, mulai, selesai, judul, pemateri, kelas, ke, subtitle = true, onTutup }) {
+const selesaiDt = (a, b) => b - a;
+export default function BingkaiYouTube({ id, mulai, selesai, judul, pemateri, kelas, ke, subtitle = true, musik = null, volMusik = 12, onTutup }) {
   const [skala, setSkala] = useState(0.3);
   const [putar, setPutar] = useState(false);
   const [menu, setMenu] = useState(true);
@@ -13,6 +14,27 @@ export default function BingkaiYouTube({ id, mulai, selesai, judul, pemateri, ke
     const atur = () => setSkala(Math.min(window.innerWidth / 1080, window.innerHeight / 1920));
     atur(); window.addEventListener("resize", atur); return () => window.removeEventListener("resize", atur);
   }, []);
+  // Backsound opsional: berbunyi lirih begitu klip diputar, berhenti pelan saat klip selesai (atau bingkai ditutup).
+  useEffect(() => {
+    if (!putar || !musik) return;
+    const lagu = new Audio(); const url = URL.createObjectURL(musik);
+    lagu.src = url; lagu.loop = true; lagu.volume = 0;
+    const vol = Math.max(0, Math.min(1, volMusik / 100));
+    let pewaktu = null;
+    const ubah = (target, detik, sesudah) => {
+      const awal = lagu.volume, mulai = performance.now();
+      clearInterval(pewaktu);
+      pewaktu = setInterval(() => {
+        const r = Math.min(1, (performance.now() - mulai) / (detik * 1000));
+        lagu.volume = Math.max(0, Math.min(1, awal + (target - awal) * r));
+        if (r >= 1) { clearInterval(pewaktu); sesudah && sesudah(); }
+      }, 60);
+    };
+    lagu.play().then(() => ubah(vol, 1.5)).catch(() => {});
+    const lama = mulai != null && selesai != null ? Math.max(1, selesaiDt(mulai, selesai)) : null;
+    const henti = lama ? setTimeout(() => { ubah(0, 2, () => lagu.pause()); }, lama * 1000 - 2000) : null;
+    return () => { clearInterval(pewaktu); if (henti) clearTimeout(henti); lagu.pause(); URL.revokeObjectURL(url); };
+  }, [putar, musik, volMusik, mulai, selesai]);
   const src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&modestbranding=1${subtitle ? "&cc_load_policy=1&cc_lang_pref=id&hl=id" : ""}${mulai != null ? `&start=${mulai}` : ""}${selesai != null ? `&end=${selesai}` : ""}`;
   const ar = /[؀-ۿ]/.test(judul);
 
@@ -70,7 +92,7 @@ export default function BingkaiYouTube({ id, mulai, selesai, judul, pemateri, ke
       </div>
       {menu && !putar && (
         <p className="absolute bottom-3 left-3 right-3 rounded-xl bg-black/70 p-3 text-center text-sm text-white">
-          Untuk menyimpan sebagai video: nyalakan <b>Rekam Layar</b> di HP (aktifkan suara dalam), lalu ketuk tombol putar. Layar akan mengikuti ukuran 9:16.
+          Untuk menyimpan sebagai video: nyalakan <b>Rekam Layar</b> di HP (aktifkan suara dalam), lalu ketuk tombol putar. Backsound yang Anda pilih ikut berbunyi lirih. Layar akan mengikuti ukuran 9:16.
         </p>
       )}
     </div>

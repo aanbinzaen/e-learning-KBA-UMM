@@ -137,16 +137,15 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
       // Layar dijaga tetap menyala; bila halaman sempat tersembunyi (ganti aplikasi/layar mati), rekaman dan video dijeda
       // agar tidak ada bagian beku yang membuat WhatsApp menolak berkas.
       try { kunciLayar = await navigator.wakeLock?.request("screen"); } catch { /* tidak didukung */ }
-      let macet = false, tersembunyi = false;
+      // Perekam TIDAK pernah dijeda: menjeda MediaRecorder membuat jalur suara dan gambar bergeser (suara mendahului gambar).
+      // Bila halaman tersembunyi, hanya video/musik yang berhenti sebentar dan lanjut lagi saat halaman kembali.
+      let tersembunyi = false;
       const ubahTampak = () => {
         if (document.hidden) {
           tersembunyi = true;
-          if (rec.state === "recording") rec.pause();
           if (v) v.pause(); if (lagu) lagu.pause();
         } else if (tersembunyi) {
           tersembunyi = false;
-          if (v && v.readyState < 3) macet = true; // biarkan loop yang melanjutkan setelah data siap
-          else if (rec.state === "paused") rec.resume();
           if (v) v.play().catch(() => {}); if (lagu) lagu.play().catch(() => {});
         }
       };
@@ -162,12 +161,6 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
           const kini = performance.now(); tMaya += Math.min(0.1, (kini - terakhir) / 1000); terakhir = kini; // waktu hanya berjalan saat bingkai tergambar
           const wall = (kini - t0) / 1000;
           const t = v ? v.currentTime - awal : tMaya;
-          // video tersendat (memuat/decode): jeda perekam agar waktu macet tidak ikut terekam & durasi tetap sesuai
-          if (v) {
-            const tersendat = v.readyState < 3 && !v.ended;
-            if (tersendat && !macet && rec.state === "recording") { rec.pause(); macet = true; if (lagu) lagu.pause(); }
-            else if (!tersendat && macet && rec.state === "paused" && !document.hidden) { rec.resume(); macet = false; if (lagu) lagu.play().catch(() => {}); }
-          }
           gambarReels(ctx, st, aset, Math.max(0, t), dur);
           // backsound lirih: masuk perlahan, keluar perlahan di akhir
           if (gainLagu) gainLagu.gain.value = (volMusik / 100) * Math.max(0, Math.min(1, t / 1.2, (dur - t) / 1.5));
@@ -214,7 +207,7 @@ export default function PembuatReels({ pengajar = "", rekaman = [] }) {
 
   return (
     <div className="grid gap-5 md:grid-cols-[1fr_300px]">
-      {bingkai && idYt && <BingkaiYouTube id={idYt} mulai={Number.isFinite(mulaiDt) ? mulaiDt : null} selesai={Number.isFinite(selesaiDt) ? selesaiDt : null} judul={judul || "Judul Reels"} pemateri={pemateri} kelas={kelas} ke={ke} subtitle={subYt} onTutup={() => setBingkai(false)} />}
+      {bingkai && idYt && <BingkaiYouTube id={idYt} mulai={Number.isFinite(mulaiDt) ? mulaiDt : null} selesai={Number.isFinite(selesaiDt) ? selesaiDt : null} judul={judul || "Judul Reels"} pemateri={pemateri} kelas={kelas} ke={ke} subtitle={subYt} musik={musik} volMusik={volMusik} onTutup={() => setBingkai(false)} />}
       <div className="space-y-4">
         <div className="flex gap-2">
           {[["video", "Dari video kajian"], ["kartu", "Kartu teks saja"]].map(([k, l]) => (
