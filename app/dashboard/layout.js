@@ -18,12 +18,12 @@ export default async function DashboardLayout({ children }) {
     ...(profil.role === "admin" ? [["/admin", "Admin"]] : []),
   ];
   return (
-    <div className="bagian">
-      <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex flex-wrap gap-2" aria-label="Menu akun">
-          {nav.map(([h, l]) => <Link key={h} href={h} className="rounded-2xl border-2 border-hijau/20 bg-white px-4 py-2.5 text-sm font-medium text-hijau hover:bg-hijau-muda">{l}</Link>)}
+    <div className="bagian !py-5 md:!py-8">
+      <div className="no-print -mx-5 mb-4 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex gap-2" aria-label="Menu akun">
+          {nav.map(([h, l]) => <Link key={h} href={h} className="shrink-0 whitespace-nowrap rounded-full border border-hijau/25 bg-white px-3.5 py-1.5 text-[13px] font-medium text-hijau hover:bg-hijau-muda">{l}</Link>)}
         </nav>
-        <form action={keluar}><button className="rounded-xl border-2 border-hijau/30 px-4 py-2.5 text-sm font-medium text-hijau hover:bg-hijau-muda">Keluar</button></form>
+        <form action={keluar} className="shrink-0"><button className="whitespace-nowrap rounded-full border border-hijau/30 px-3.5 py-1.5 text-[13px] font-medium text-hijau hover:bg-hijau-muda">Keluar</button></form>
       </div>
       {children}
     </div>
