@@ -3,7 +3,9 @@ import { wajibGuru } from "@/lib/guru";
 import { tanggalIndo } from "@/lib/data";
 import PilihGrup from "@/components/PilihGrup";
 import FormAksi from "@/components/FormAksi";
-import { tambahPertemuan, simpanTautanKelas, ubahAbsensiBuka } from "./actions";
+import FormPdf from "./pertemuan/[id]/FormPdf";
+import FormGambar from "./pertemuan/[id]/FormGambar";
+import { tambahPertemuan, simpanTautanKelas, ubahAbsensiBuka, buatKuis, tambahRekaman, tambahCatatan } from "./actions";
 
 export default async function Guru({ searchParams }) {
   const { supabase, grup } = await wajibGuru();
@@ -18,6 +20,7 @@ export default async function Guru({ searchParams }) {
   const berlangsung = (daftar || []).find((x) => { const t = new Date(x.waktu).getTime(); return t >= kini - 3 * 3600e3 && t <= kini + 30 * 60e3; });
   const berikutnya = [...(daftar || [])].filter((x) => new Date(x.waktu).getTime() > kini).sort((a, b) => new Date(a.waktu) - new Date(b.waktu))[0];
   const dibuka = (daftar || []).filter((x) => x.absensi_buka);
+  const target0 = (daftar || []).find((x) => x.id === searchParams.p);
   const fokus = berlangsung || dibuka[0] || berikutnya || (daftar || [])[0];
 
   return (
@@ -48,6 +51,51 @@ export default async function Guru({ searchParams }) {
           </div>
         </section>
       )}
+
+      {(target0 || fokus) && (() => {
+        const t = target0 || fokus;
+        const pilihan = (daftar || []).slice(0, 5);
+        return (
+          <section className="kartu space-y-3 !border-2 !border-kuning/60">
+            <h2 className="text-lg font-semibold text-hijau">Tambah cepat</h2>
+            <p className="text-sm text-tinta/70">Untuk pertemuan: <b>{t.judul}</b></p>
+            {pilihan.length > 1 && (
+              <div className="flex flex-wrap gap-2">
+                {pilihan.map((x) => (
+                  <Link key={x.id} href={`/guru?grup=${aktif.id}&p=${x.id}`} className={`rounded-full border-2 px-3 py-1 text-xs font-semibold ${x.id === t.id ? "border-hijau bg-hijau text-white" : "border-hijau/30 text-hijau"}`}>{x.judul.length > 22 ? x.judul.slice(0, 22) + "…" : x.judul}</Link>
+                ))}
+              </div>
+            )}
+            <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-semibold text-hijau">📝 Buat kuis</summary>
+              <FormAksi aksi={buatKuis.bind(null, t.id, aktif.id)} kirim="Buat kuis" reset className="mt-3 space-y-4">
+                <div><label className="label" htmlFor="jk0">Judul kuis baru</label><input id="jk0" name="judul" className="input" placeholder="Kuis Pertemuan 1" required /></div>
+                <p className="text-sm text-tinta/70">Setelah dibuat, buka kuisnya dari halaman pertemuan untuk menambah soal dan menerbitkannya.</p>
+              </FormAksi></details>
+            <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-semibold text-hijau">🎥 Tambah rekaman</summary>
+              <FormAksi aksi={tambahRekaman.bind(null, t.id, aktif.id)} kirim="Tambah rekaman" reset className="mt-3 space-y-4">
+                <div><label className="label" htmlFor="jr0">Judul rekaman</label><input id="jr0" name="judul" className="input" required /></div>
+                <div><label className="label" htmlFor="lk0">Tautan YouTube</label><input id="lk0" name="link" className="input" placeholder="https://youtu.be/…" required /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="label" htmlFor="km0">Klip mulai (opsional)</label><input id="km0" name="mulai" className="input" placeholder="10.22" inputMode="numeric" /></div>
+                  <div><label className="label" htmlFor="ks0">Klip selesai (opsional)</label><input id="ks0" name="selesai" className="input" placeholder="15.45" inputMode="numeric" /></div>
+                </div>
+                <p className="text-sm text-tinta/70">Menit.detik, contoh 10.22. Kosongkan keduanya untuk rekaman utuh.</p>
+              </FormAksi></details>
+            <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-semibold text-hijau">📚 Tambah materi</summary>
+              <div className="mt-3 space-y-3">
+                <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-medium text-hijau">+ Unggah PDF</summary><div className="mt-3"><FormPdf pertemuanId={t.id} grupId={aktif.id} /></div></details>
+                <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-medium text-hijau">+ Unggah gambar (PNG/JPG)</summary><div className="mt-3"><FormGambar pertemuanId={t.id} grupId={aktif.id} /></div></details>
+                <details className="rounded-2xl border-2 border-hijau/15 p-4"><summary className="cursor-pointer font-medium text-hijau">+ Tulis catatan</summary>
+                  <FormAksi aksi={tambahCatatan.bind(null, t.id, aktif.id)} kirim="Simpan catatan" reset className="mt-3 space-y-4">
+                    <div><label className="label" htmlFor="jc0">Judul</label><input id="jc0" name="judul" className="input" required /></div>
+                    <div><label className="label" htmlFor="isi0">Isi catatan</label><textarea id="isi0" name="catatan" rows="5" className="input !py-3" required /></div>
+                  </FormAksi></details>
+              </div>
+            </details>
+            <Link href={`/guru/pertemuan/${t.id}`} className="block text-center text-sm font-medium text-hijau underline">Buka halaman lengkap pertemuan ini</Link>
+          </section>
+        );
+      })()}
 
       <details className="kartu" open={!daftar?.length}>
         <summary className="cursor-pointer font-semibold text-hijau">+ Tambah pertemuan</summary>
