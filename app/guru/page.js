@@ -31,6 +31,13 @@ export default async function Guru({ searchParams }) {
   const pilihan = (daftar || []).slice(0, 5);
 
   const item = [];
+  item.unshift({ id: "pertemuan", ikon: "pertemuan", label: "Buat kelas", judul: "Buat pertemuan / kelas baru", sorot: true, isi: (
+    <FormAksi aksi={tambahPertemuan.bind(null, aktif.id)} kirim="Buat pertemuan" className="space-y-4">
+      <div><label className="label" htmlFor="judul">Judul pertemuan</label><input id="judul" name="judul" className="input" placeholder="Pertemuan 1: Huruf Hijaiyah" required /></div>
+      <div><label className="label" htmlFor="waktu">Tanggal dan jam (WIB)</label><input id="waktu" name="waktu" type="datetime-local" className="input" required /></div>
+      <div><label className="label" htmlFor="keterangan">Keterangan (opsional)</label><textarea id="keterangan" name="keterangan" rows="2" className="input !py-3" /></div>
+      <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="notif" defaultChecked className="h-6 w-6 accent-[#1E7B34]" /> Kirim notifikasi ke HP pengguna</label>
+    </FormAksi>) });
   if (t) {
     item.push({ id: "kuis", ikon: "kuis", label: "Kuis", judul: "Buat kuis", isi: (
       <FormAksi aksi={buatKuis.bind(null, t.id, aktif.id)} kirim="Buat kuis" reset className="space-y-4">
@@ -88,13 +95,6 @@ export default async function Guru({ searchParams }) {
         <input name="link" type="url" inputMode="url" className="input" defaultValue={tt?.link || ""} placeholder="https://zoom.us/j/…  atau  https://meet.google.com/…" aria-label="Link kelas" />
       </FormAksi>
     </div>) });
-  item.push({ id: "pertemuan", ikon: "pertemuan", label: "Pertemuan", judul: "Tambah pertemuan", isi: (
-    <FormAksi aksi={tambahPertemuan.bind(null, aktif.id)} kirim="Buat pertemuan" className="space-y-4">
-      <div><label className="label" htmlFor="judul">Judul pertemuan</label><input id="judul" name="judul" className="input" placeholder="Pertemuan 1: Huruf Hijaiyah" required /></div>
-      <div><label className="label" htmlFor="waktu">Tanggal dan jam (WIB)</label><input id="waktu" name="waktu" type="datetime-local" className="input" required /></div>
-      <div><label className="label" htmlFor="keterangan">Keterangan (opsional)</label><textarea id="keterangan" name="keterangan" rows="2" className="input !py-3" /></div>
-      <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="notif" defaultChecked className="h-6 w-6 accent-[#1E7B34]" /> Kirim notifikasi ke HP pengguna</label>
-    </FormAksi>) });
   item.push({ id: "reels", ikon: "reels", label: "Reels", href: "/guru/reels" });
   item.push({ id: "pengumuman", ikon: "pengumuman", label: "Pengumuman", href: "/guru/pengumuman" });
 

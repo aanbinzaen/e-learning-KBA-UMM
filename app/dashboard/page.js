@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ambilSesi } from "@/lib/auth";
-import AktifkanNotifikasi from "@/components/AktifkanNotifikasi";
 import { tanggalIndo, tanggalPendek, ambilPengumuman } from "@/lib/data";
 import TombolGabung from "./TombolGabung";
 import TombolAbsen from "./absensi/TombolAbsen";
 import PanelAksi from "@/components/PanelAksi";
 import Ikon from "@/components/Ikon";
+import LoncengNotifikasi from "@/components/LoncengNotifikasi";
 
 export default async function Dashboard() {
   const { supabase, user, profil: p } = await ambilSesi();
@@ -117,10 +117,10 @@ export default async function Dashboard() {
     <div className="space-y-4">
       <section className="flex items-center justify-between gap-3 rounded-kartu bg-hijau px-4 py-3 text-white">
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-bold leading-snug">Assalamu'alaikum, {p?.nama_lengkap}</h1>
-          <p className="truncate text-xs text-white/85">{peran} · Kode {p?.kode}{grup ? ` · ${grup.nama}` : ""}</p>
+          <h1 className="text-lg font-bold leading-snug">Assalamu'alaikum, {p?.nama_lengkap}</h1>
+          <p className="text-xs text-white/85">{peran} · Kode {p?.kode}{grup ? ` · ${grup.nama}` : ""}</p>
         </div>
-        <span className="arab shrink-0 text-xl text-kuning" lang="ar" aria-hidden>السلام عليكم</span>
+        <LoncengNotifikasi />
       </section>
 
       {grup ? (
@@ -180,7 +180,6 @@ export default async function Dashboard() {
           <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">{teman.map((t) => <li key={t.nama_lengkap} className="py-1">{t.nama_lengkap}</li>)}</ul>
         </details>
       )}
-      <AktifkanNotifikasi />
     </div>
   );
 }

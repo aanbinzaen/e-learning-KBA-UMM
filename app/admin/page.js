@@ -1,12 +1,14 @@
 import { wajibAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import Link from "next/link";
+import PanelAksi from "@/components/PanelAksi";
 
-const PINTASAN = [
-  ["/guru/pengumuman", "📣", "Pengumuman & Flyer", "Buat flyer dan kirim ke grup WhatsApp", "btn-kuning"],
-  ["/admin/peserta/baru", "➕", "Tambah peserta", "Daftarkan peserta baru + kode & password awal", "btn-hijau"],
-  ["/admin/peserta", "🔑", "Edit / reset sandi", "Cari peserta, ubah data, atur ulang password", "btn-hijau"],
-  ["/guru/reels", "🎬", "Reels klip kajian", "Potongan kajian jadi video 9:16", "btn-hijau"],
+const MENU = [
+  { id: "notif", ikon: "lonceng", label: "Kirim notifikasi", href: "/admin/notifikasi", sorot: true },
+  { id: "pengumuman", ikon: "pengumuman", label: "Pengumuman", href: "/guru/pengumuman" },
+  { id: "peserta-baru", ikon: "peserta", label: "Tambah peserta", href: "/admin/peserta/baru" },
+  { id: "sandi", ikon: "kunci", label: "Edit / sandi", href: "/admin/peserta" },
+  { id: "reels", ikon: "reels", label: "Reels", href: "/guru/reels" },
+  { id: "faidah", ikon: "faidah", label: "Faidah", href: "/admin/faidah" },
 ];
 
 async function simpanPengaturan(formData) {
@@ -32,19 +34,11 @@ export default async function Ringkasan() {
   const kartu = [["Peserta", total], ["Ikhwan", ikhwan], ["Akhwat", akhwat], ["Grup", grup], ["Belum ganti password", belumGanti]];
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-hijau-tua">Beranda Admin</h1>
-      <section aria-label="Pintasan utama" className="grid gap-3 sm:grid-cols-2">
-        {PINTASAN.map(([h, ikon, judul, ket, kelas]) => (
-          <Link key={h} href={h} className={`${kelas} !flex-col !items-start !gap-1 !p-5 text-left !min-h-[96px]`}>
-            <span className="text-lg font-bold"><span aria-hidden>{ikon}</span> {judul}</span>
-            <span className="text-sm font-normal opacity-90">{ket}</span>
-          </Link>
-        ))}
-      </section>
-      <h2 className="text-lg font-semibold text-hijau">Ringkasan</h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <h1 className="text-xl font-bold text-hijau-tua">Beranda Admin</h1>
+      <PanelAksi item={MENU} kolom={3} />
+      <div className="grid grid-cols-3 gap-2 md:grid-cols-5">
         {kartu.map(([l, n]) => (
-          <div key={l} className="kartu !p-4"><p className="text-3xl font-bold text-hijau">{n}</p><p className="text-sm text-tinta/70">{l}</p></div>
+          <div key={l} className="kartu !rounded-2xl !p-3"><p className="text-2xl font-bold leading-none text-hijau">{n}</p><p className="mt-1 text-xs leading-tight text-tinta/70">{l}</p></div>
         ))}
       </div>
       <form action={simpanPengaturan} className="kartu flex flex-wrap items-center justify-between gap-4">

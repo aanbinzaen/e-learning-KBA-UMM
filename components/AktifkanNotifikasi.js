@@ -11,9 +11,9 @@ function kunciKeBytes(b64) {
 }
 const kirim = (url, data) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then((r) => r.json().then((j) => ({ ok: r.ok, ...j })));
 
-const Kotak = ({ children }) => <section className="kartu space-y-3"><h2 className="text-lg font-semibold text-hijau">Notifikasi di HP</h2>{children}</section>;
+const Kotak = ({ children, tanpaJudul }) => <section className="kartu space-y-3">{!tanpaJudul && <h2 className="text-lg font-semibold text-hijau">Notifikasi di HP</h2>}{children}</section>;
 
-export default function AktifkanNotifikasi() {
+export default function AktifkanNotifikasi({ mulaiOtomatis = false, tanpaJudul = false }) {
   const [status, setStatus] = useState("memeriksa"); // memeriksa | tidak | ios | siap
   const [aktif, setAktif] = useState(false);
   const [izin, setIzin] = useState("default");
@@ -34,6 +34,7 @@ export default function AktifkanNotifikasi() {
         const reg = await navigator.serviceWorker.register("/sw.js");
         const sub = await reg.pushManager.getSubscription();
         setAktif(!!sub); setStatus("siap");
+        if (!sub && mulaiOtomatis && Notification.permission === "default") aktifkan();
         // hubungkan ulang perangkat ke akun yang sedang masuk (bila ganti akun di perangkat yang sama)
         if (sub) kirim("/api/push/langgan", { langganan: sub.toJSON(), topik: t }).catch(() => {});
       } catch { setStatus("tidak"); }
@@ -89,15 +90,15 @@ export default function AktifkanNotifikasi() {
   if (status === "memeriksa") return null;
 
   if (status === "ios") return (
-    <Kotak>
+    <Kotak tanpaJudul={tanpaJudul}>
       <p className="text-sm leading-relaxed">Di iPhone/iPad, notifikasi hanya bisa diterima bila situs dipasang di layar utama:</p>
       <ol className="list-decimal space-y-1 pl-5 text-sm leading-relaxed"><li>Buka situs ini di <b>Safari</b>.</li><li>Ketuk tombol <b>Bagikan</b> lalu <b>Tambah ke Layar Utama</b>.</li><li>Buka situs dari <b>ikon di layar utama</b>, lalu aktifkan notifikasi di sini.</li></ol>
     </Kotak>
   );
-  if (status === "tidak") return <Kotak><p className="text-sm leading-relaxed text-tinta/70">Peramban ini belum mendukung notifikasi. Gunakan Chrome atau Firefox (Android/komputer), atau Safari di iPhone dengan iOS 16.4 ke atas.</p></Kotak>;
+  if (status === "tidak") return <Kotak tanpaJudul={tanpaJudul}><p className="text-sm leading-relaxed text-tinta/70">Peramban ini belum mendukung notifikasi. Gunakan Chrome atau Firefox (Android/komputer), atau Safari di iPhone dengan iOS 16.4 ke atas.</p></Kotak>;
 
   return (
-    <Kotak>
+    <Kotak tanpaJudul={tanpaJudul}>
       {!aktif ? (
         <>
           <p className="text-sm leading-relaxed">Dapatkan pemberitahuan di HP saat ada <b>kelas, absensi, kuis, pengumuman, jadwal, atau faidah baru</b>, walau situs tidak sedang dibuka.</p>
