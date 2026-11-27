@@ -108,7 +108,7 @@ export default async function Beranda() {
         </div>
       </section>
 
-      <section className="bagian">
+      <section id="pengumuman" className="bagian scroll-mt-4">
         <Judul>Pengumuman</Judul>
         {pengumuman.length === 0 ? (
           <p className="kartu mt-6 text-tinta/70">Belum ada pengumuman.</p>

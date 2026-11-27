@@ -11,7 +11,7 @@ async function sesiGuru() {
   return s;
 }
 const TIDAK = { galat: "Anda tidak berhak melakukan ini." };
-const segarkan = () => ["/", "/faidah", "/guru/faidah", "/admin/faidah"].forEach((p) => revalidatePath(p));
+const segarkan = () => ["/", "/faidah", "/guru", "/guru/faidah", "/admin/faidah"].forEach((p) => revalidatePath(p));
 
 function baca(fd) {
   const judul = bersih(fd.get("judul")), isi = String(fd.get("isi") || "").trim();

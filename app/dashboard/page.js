@@ -1,9 +1,22 @@
 import Link from "next/link";
 import { ambilSesi } from "@/lib/auth";
 import AktifkanNotifikasi from "@/components/AktifkanNotifikasi";
-import { tanggalIndo } from "@/lib/data";
+import { tanggalIndo, tanggalPendek, ambilPengumuman } from "@/lib/data";
 import TombolGabung from "./TombolGabung";
 import TombolAbsen from "./absensi/TombolAbsen";
+
+function Ubin({ href, ikon, judul, ket, lencana, menonjol = false }) {
+  return (
+    <Link href={href} className={`relative flex min-h-[112px] flex-col justify-between rounded-kartu border-2 p-4 transition hover:-translate-y-0.5 hover:shadow-md ${menonjol ? "border-kuning bg-kuning/25" : "border-hijau/15 bg-white"}`}>
+      <span className="text-3xl" aria-hidden>{ikon}</span>
+      <span>
+        <span className="block font-bold leading-tight text-hijau-tua">{judul}</span>
+        {ket && <span className="mt-0.5 block text-xs leading-snug text-tinta/70">{ket}</span>}
+      </span>
+      {lencana ? <span className="absolute right-3 top-3 rounded-full bg-hijau px-2.5 py-0.5 text-xs font-bold text-white">{lencana}</span> : null}
+    </Link>
+  );
+}
 
 export default async function Dashboard() {
   const { supabase, user, profil: p } = await ambilSesi();
@@ -27,7 +40,7 @@ export default async function Dashboard() {
       supabase.from("absensi").select("pertemuan_id,status,dicatat_oleh").eq("profile_id", user.id),
       supabase.from("kuis").select("id,judul").eq("grup_id", grup.id).eq("diterbitkan", true).order("dibuat_pada", { ascending: false }).limit(4),
       supabase.from("percobaan").select("kuis_id,nilai").eq("profile_id", user.id),
-      supabase.from("rekaman").select("id,judul,youtube_id,video_path,pertemuan_id,mulai_detik,selesai_detik").eq("grup_id", grup.id).order("dibuat_pada", { ascending: false }).limit(3),
+      supabase.from("rekaman").select("id,judul,youtube_id,video_path,pertemuan_id,mulai_detik,selesai_detik").eq("grup_id", grup.id).order("dibuat_pada", { ascending: false }).limit(5),
     ]);
     daftarPertemuan = pt.data || [];
     absensiSaya = Object.fromEntries((absAll.data || []).map((a) => [a.pertemuan_id, a]));
@@ -54,12 +67,14 @@ export default async function Dashboard() {
   const absenDibuka = daftarPertemuan.filter((x) => x.absensi_buka);
   const statusFokus = fokus ? absensiSaya[fokus.id] : null;
 
+  const pengumuman = p?.role === "peserta" ? await ambilPengumuman(3) : [];
+  const kuisBelum = kuisDaftar.filter((q) => !(q.id in nilaiKuis)).length;
   return (
     <div className="space-y-5">
       <section className="rounded-kartu bg-hijau p-6 text-white">
-        <p className="arab text-right text-3xl text-kuning" lang="ar">السلام عليكم</p>
-        <h1 className="mt-2 text-2xl font-bold">Assalamu'alaikum, {p?.nama_lengkap}</h1>
-        <p className="mt-1 text-white/90">{peran} · Kode {p?.kode}</p>
+        <p className="arab text-right text-2xl text-kuning" lang="ar">السلام عليكم</p>
+        <h1 className="text-xl font-bold leading-snug">Assalamu'alaikum, {p?.nama_lengkap}</h1>
+        <p className="mt-1 text-sm text-white/90">{peran} · Kode {p?.kode}{grup ? ` · ${grup.nama}` : ""}</p>
       </section>
 
       {grup ? (
@@ -84,8 +99,22 @@ export default async function Dashboard() {
             <p className="rounded-kartu bg-yellow-50 p-4 text-sm text-yellow-900">Anda belum tercatat hadir. Jika tidak masuk lewat tombol Gabung Kelas, tunggu pengajar membuka absensi lalu isi absen mandiri di sini.</p>
           )}
 
-          <section className="kartu space-y-3">
-            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-hijau">Kuis</h2><Link href="/dashboard/kelas" className="text-sm font-medium text-hijau underline">Semua</Link></div>
+          {p?.role === "peserta" && (
+            <section aria-label="Menu utama" className="space-y-3">
+              <h2 className="text-lg font-bold text-hijau-tua">Menu Utama</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <Ubin href="/dashboard/absensi" ikon="✋" judul="Absen" ket={absenDibuka.length ? "Absen mandiri sedang dibuka" : "Riwayat & absen mandiri"} lencana={absenDibuka.length ? "DIBUKA" : null} menonjol={absenDibuka.length > 0} />
+                <Ubin href="#kuis" ikon="📝" judul="Kuis" ket={kuisDaftar.length ? `${kuisDaftar.length} kuis terbit` : "Belum ada kuis"} lencana={kuisBelum || null} />
+                <Ubin href="#rekaman" ikon="▶️" judul="Rekaman" ket="Rekaman kelas & video pendek" lencana={rekamanBaru.length || null} />
+                <Ubin href="#pengumuman" ikon="📢" judul="Pengumuman" ket={pengumuman.length ? "Kabar terbaru" : "Belum ada"} lencana={pengumuman.length || null} />
+                <Ubin href="/dashboard/kelas" ikon="📚" judul="Materi" ket="Materi per pertemuan" />
+                <Ubin href="/dashboard/rapor" ikon="📊" judul="Rapor" ket="Nilai & kehadiran saya" />
+              </div>
+            </section>
+          )}
+
+          <section id="kuis" className="kartu scroll-mt-4 space-y-3">
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-hijau">📝 Kuis</h2><Link href="/dashboard/kelas" className="text-sm font-medium text-hijau underline">Semua</Link></div>
             {kuisDaftar.length ? (
               <ul className="divide-y divide-hijau/10">
                 {kuisDaftar.map((q) => (
@@ -98,8 +127,8 @@ export default async function Dashboard() {
             ) : <p className="text-sm text-tinta/60">Belum ada kuis yang terbit.</p>}
           </section>
 
-          <section className="kartu space-y-3">
-            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-hijau">Rekaman terbaru</h2><Link href="/dashboard/kelas" className="text-sm font-medium text-hijau underline">Semua</Link></div>
+          <section id="rekaman" className="kartu scroll-mt-4 space-y-3">
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-hijau">▶️ Rekaman &amp; Video Pendek</h2><Link href="/dashboard/kelas" className="text-sm font-medium text-hijau underline">Semua</Link></div>
             {rekamanBaru.length ? (
               <ul className="space-y-3">
                 {rekamanBaru.map((rk) => (
@@ -112,6 +141,24 @@ export default async function Dashboard() {
               </ul>
             ) : <p className="text-sm text-tinta/60">Belum ada rekaman.</p>}
           </section>
+          {p?.role === "peserta" && (
+            <section id="pengumuman" className="kartu scroll-mt-4 space-y-3">
+              <h2 className="text-lg font-semibold text-hijau">📢 Pengumuman</h2>
+              {pengumuman.length ? (
+                <ul className="space-y-3">
+                  {pengumuman.map((x) => (
+                    <li key={x.id} className="relative overflow-hidden rounded-2xl bg-hijau-muda/60 p-4 pl-5">
+                      <span aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-kuning to-jingga" />
+                      <p className="font-semibold leading-snug text-hijau-tua">{x.judul}</p>
+                      {x.dibuat_pada && <p className="text-xs text-tinta/60">{tanggalPendek(x.dibuat_pada)}</p>}
+                      <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm" dir="auto">{x.isi}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-sm text-tinta/60">Belum ada pengumuman.</p>}
+              <Link href="/#pengumuman" className="text-sm font-medium text-hijau underline">Lihat semua di beranda situs</Link>
+            </section>
+          )}
         </>
       ) : (
         <section className="kartu space-y-3">
@@ -127,10 +174,10 @@ export default async function Dashboard() {
       )}
 
       {grup && (
-        <section className="kartu">
-          <h2 className="text-lg font-semibold text-hijau">Teman satu grup ({teman.length})</h2>
+        <details className="kartu">
+          <summary className="cursor-pointer text-lg font-semibold text-hijau">Teman satu grup ({teman.length})</summary>
           <ul className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">{teman.map((t) => <li key={t.nama_lengkap} className="py-1">{t.nama_lengkap}</li>)}</ul>
-        </section>
+        </details>
       )}
       {grup && (
         <section className="kartu space-y-3">
